@@ -13,10 +13,10 @@ from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.structs.actor import Actor
 
 
-@register_agent(asset_download_ids=["xarm6"])
+@register_agent()
 class XArm6Robotiq(BaseAgent):
     uid = "xarm6_robotiq"
-    urdf_path = f"{ASSET_DIR}/robots/xarm6/xarm6_robotiq.urdf"
+    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm6/xarm6_robotiq.urdf"
 
     urdf_config = dict(
         _materials=dict(
@@ -98,7 +98,7 @@ class XArm6Robotiq(BaseAgent):
 
     gripper_stiffness = 1e5
     gripper_damping = 2000
-    gripper_force_limit = 0.1
+    gripper_force_limit = 10.0
     gripper_friction = 1
     ee_link_name = "eef"
 
@@ -438,11 +438,21 @@ class XArm6RobotiqWristCamera(XArm6Robotiq):
             CameraConfig(
                 uid="hand_camera",
                 pose=sapien.Pose(p=[0, 0, -0.05], q=[0.70710678, 0, 0.70710678, 0]),
-                width=128,
-                height=128,
+                width=256,
+                height=256,
                 fov=np.pi / 2,
                 near=0.01,
                 far=100,
                 mount=self.robot.links_map["camera_link"],
-            )
+            ),
+            CameraConfig(
+                uid="third_view_camera",
+                pose=sapien_utils.look_at(eye=[0.4, 0.0, 0.3], target=[0.0, 0.0, 0.15]),
+                width=256,
+                height=256,
+                fov=1,
+                near=0.01,
+                far=100,
+                mount=None,  # 不绑定到任何连杆，固定在世界坐标系
+            ),
         ]

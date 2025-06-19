@@ -17,7 +17,7 @@ from mani_skill.utils.structs.types import SceneConfig, SimConfig
 from transforms3d.euler import euler2quat
 
 
-@register_env("DrawSVG-v1", max_episode_steps=500)
+@register_env("DrawSVG-v1", max_episode_steps=1000)
 class DrawSVGEnv(BaseEnv):
     """
     **Task Description:**
@@ -258,7 +258,7 @@ class DrawSVGEnv(BaseEnv):
             base_color=np.array([10, 10, 10, 255]) / 255,
         )
 
-        self.dots_dist = torch.ones((self.num_envs, 500), device=self.device) * -1
+        self.dots_dist = torch.ones((self.num_envs, 1000), device=self.device) * -1
         self.ref_dist = torch.zeros(
             (self.num_envs, self.original_points.shape[0]), device=self.device
         ).to(bool)
@@ -293,7 +293,7 @@ class DrawSVGEnv(BaseEnv):
                 -1, -2
             )  # rotation matrix
             self.points[env_idx] += target_pos.unsqueeze(1)
-            self.dots_dist[env_idx] = torch.ones((self.num_envs, 500)) * -1
+            self.dots_dist[env_idx] = torch.ones((self.num_envs, 1000)) * -1
             self.ref_dist[env_idx] = torch.zeros(
                 (self.num_envs, self.original_points.shape[0])
             ).to(bool)

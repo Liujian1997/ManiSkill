@@ -4,9 +4,10 @@ import numpy as np
 import sapien
 import torch
 
-from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import Fetch, Panda, XArm6Robotiq
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
+from mani_skill.envs.tasks.tabletop.pull_cube_tool_cfgs import PULL_CUBE_TOOL_CONFIGS
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import sapien_utils
 from mani_skill.utils.building import actors
@@ -34,10 +35,11 @@ class PullCubeToolEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PullCubeTool-v1_rt.mp4"
 
-    SUPPORTED_ROBOTS = ["panda", "fetch"]
+    SUPPORTED_ROBOTS = ["panda", "fetch", "xarm6_robotiq"]
     SUPPORTED_REWARD_MODES = ("normalized_dense", "dense", "sparse", "none")
-    agent: Union[Panda, Fetch]
+    agent: Union[Panda, Fetch, XArm6Robotiq]
 
+    # Default values (will be overridden by config)
     goal_radius = 0.3
     cube_half_size = 0.02
     handle_length = 0.2
@@ -49,6 +51,27 @@ class PullCubeToolEnv(BaseEnv):
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+
+        # Load configuration based on robot type
+        if robot_uids in PULL_CUBE_TOOL_CONFIGS:
+            cfg = PULL_CUBE_TOOL_CONFIGS[robot_uids]
+        else:
+            cfg = PULL_CUBE_TOOL_CONFIGS["panda"]
+
+        # Set task parameters from config
+        self.goal_radius = cfg["goal_radius"]
+        self.cube_half_size = cfg["cube_half_size"]
+        self.handle_length = cfg["handle_length"]
+        self.hook_length = cfg["hook_length"]
+        self.width = cfg["width"]
+        self.height = cfg["height"]
+        self.cube_size = cfg["cube_size"]
+        self.arm_reach = cfg["arm_reach"]
+        self.sensor_cam_eye_pos = cfg["sensor_cam_eye_pos"]
+        self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
+        self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
+        self.human_cam_target_pos = cfg["human_cam_target_pos"]
+
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -61,7 +84,9 @@ class PullCubeToolEnv(BaseEnv):
 
     @property
     def _default_sensor_configs(self):
-        pose = sapien_utils.look_at(eye=[0.3, 0, 0.5], target=[-0.1, 0, 0.1])
+        pose = sapien_utils.look_at(
+            eye=self.sensor_cam_eye_pos, target=self.sensor_cam_target_pos
+        )
         return [
             CameraConfig(
                 "base_camera",
@@ -76,7 +101,9 @@ class PullCubeToolEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
+        pose = sapien_utils.look_at(
+            eye=self.human_cam_eye_pos, target=self.human_cam_target_pos
+        )
         return [
             CameraConfig(
                 "render_camera",
@@ -88,6 +115,13 @@ class PullCubeToolEnv(BaseEnv):
                 far=100,
             )
         ]
+
+    def _load_agent(self, options: dict):
+        # Set robot pose based on robot type
+        if self.robot_uids == "xarm6_robotiq":
+            super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
+        else:
+            super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
 
     def _build_l_shaped_tool(self, handle_length, hook_length, width, height):
         builder = self.scene.create_actor_builder()

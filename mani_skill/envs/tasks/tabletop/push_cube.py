@@ -155,6 +155,7 @@ class PushCubeEnv(BaseEnv):
             xyz = torch.zeros((b, 3))
             xyz[..., :2] = torch.rand((b, 2)) * 0.2 - 0.1
             xyz[..., 2] = self.cube_half_size
+            xyz[..., 0] = torch.rand((b, 1)) * 0.2 - 0.2
             q = [1, 0, 0, 0]
             # we can then create a pose object using Pose.create_from_pq to then set the cube pose with. Note that even though our quaternion
             # is not batched, Pose.create_from_pq will automatically batch p or q accordingly
@@ -226,13 +227,13 @@ class PushCubeEnv(BaseEnv):
         )
         place_reward = 1 - torch.tanh(5 * obj_to_goal_dist)
         reward += place_reward * reached
-        
+
         # Compute a z reward to encourage the robot to keep the cube on the table
         desired_obj_z = self.cube_half_size
         current_obj_z = self.obj.pose.p[..., 2]
         z_deviation = torch.abs(current_obj_z - desired_obj_z)
         z_reward = 1 - torch.tanh(5 * z_deviation)
-        # We multiply the z reward by the place_reward and reached mask so that 
+        # We multiply the z reward by the place_reward and reached mask so that
         #   we only add the z reward if the robot has reached the desired push pose
         #   and the z reward becomes more important as the robot gets closer to the goal.
         reward += place_reward * z_reward * reached

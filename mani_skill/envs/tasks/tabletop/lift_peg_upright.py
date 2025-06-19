@@ -6,7 +6,8 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 
-from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import Fetch, Panda, XArm6Robotiq
+from mani_skill.envs.tasks.tabletop.lift_peg_upright_cfgs import LIFT_PEG_UPRIGHT_CONFIGS
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils.building import actors
@@ -32,24 +33,42 @@ class LiftPegUprightEnv(BaseEnv):
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/LiftPegUpright-v1_rt.mp4"
-    SUPPORTED_ROBOTS = ["panda", "fetch"]
-    agent: Union[Panda, Fetch]
+    SUPPORTED_ROBOTS = ["panda", "fetch", "xarm6_robotiq"]
+    agent: Union[Panda, Fetch, XArm6Robotiq]
 
-    peg_half_width = 0.025
-    peg_half_length = 0.12
+    # these will be overwritten per‐robot by cfg
+    peg_half_width: float
+    peg_half_length: float
+    spawn_half_size: float
+    spawn_center: tuple
+    sensor_cam_eye_pos: list
+    sensor_cam_target_pos: list
+    human_cam_eye_pos: list
+    human_cam_target_pos: list
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
+        # load robot‐specific configs
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        cfg = LIFT_PEG_UPRIGHT_CONFIGS.get(robot_uids, LIFT_PEG_UPRIGHT_CONFIGS["panda"])
+        self.peg_half_width = cfg["peg_half_width"]
+        self.peg_half_length = cfg["peg_half_length"]
+        self.spawn_half_size = cfg["spawn_half_size"]
+        self.spawn_center = cfg["spawn_center"]
+        self.sensor_cam_eye_pos = cfg["sensor_cam_eye_pos"]
+        self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
+        self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
+        self.human_cam_target_pos = cfg["human_cam_target_pos"]
+
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
     def _default_sensor_configs(self):
-        pose = look_at(eye=[0.3, 0, 0.6], target=[-0.1, 0, 0.1])
+        pose = look_at(eye=self.sensor_cam_eye_pos, target=self.sensor_cam_target_pos)
         return [CameraConfig("base_camera", pose, 128, 128, np.pi / 2, 0.01, 100)]
 
     @property
     def _default_human_render_camera_configs(self):
-        pose = look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
+        pose = look_at(self.human_cam_eye_pos, self.human_cam_target_pos)
         return CameraConfig("render_camera", pose, 512, 512, 1, 0.01, 100)
 
     def _load_agent(self, options: dict):
@@ -78,8 +97,12 @@ class LiftPegUprightEnv(BaseEnv):
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
 
-            xyz = torch.zeros((b, 3))
-            xyz[..., :2] = torch.rand((b, 2)) * 0.2 - 0.1
+            # randomize peg spawn within configured region
+            xyz = torch.zeros((b, 3), device=self.device)
+            half = self.spawn_half_size
+            center = self.spawn_center
+            vars2 = torch.rand((b, 2), device=self.device) * (2 * half) - half
+            xyz[..., :2] = vars2 + torch.tensor(center, device=self.device)
             xyz[..., 2] = self.peg_half_width
             q = euler2quat(np.pi / 2, 0, 0)
 

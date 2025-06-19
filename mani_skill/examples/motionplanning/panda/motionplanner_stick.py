@@ -7,7 +7,6 @@ from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.scene import ManiSkillScene
 from mani_skill.utils.structs.pose import to_sapien_pose
 
-
 class PandaStickMotionPlanningSolver:
     def __init__(
         self,

@@ -20,6 +20,14 @@ def solve(env: DrawTriangleEnv, seed=None, debug=False, vis=False):
     env = env.unwrapped
 
     rot = list(env.agent.tcp.pose.get_q()[0].cpu().numpy())
+    # -------------------------------------------------------------------------- #
+    # Move to just a little above the first vertex
+    # -------------------------------------------------------------------------- #
+
+    reach_pose = sapien.Pose(p=list(env.vertices[0, 0].numpy()), q=rot)
+    offset = sapien.Pose([0, 0, -0.05])
+    reach_pose = reach_pose * offset
+    res = planner.move_to_pose_with_screw(reach_pose)
 
     # -------------------------------------------------------------------------- #
     # Move to first vertex

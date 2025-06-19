@@ -10,13 +10,7 @@ from mani_skill.examples.motionplanning.panda.utils import (
 def solve(env: PickCubeEnv, seed=None, debug=False, vis=False):
     env.reset(seed=seed)
 
-    if env.unwrapped.robot_uids == "xarm6_robotiq":
-        planner_cls = XArm6RobotiqMotionPlanningSolver
-    elif env.unwrapped.robot_uids == "xarm6_pandagripper":
-        planner_cls = XArm6PandaGripperMotionPlanningSolver
-    else:
-        raise ValueError(f"Unsupported robot uid: {env.robot_uid}")
-    planner = planner_cls(
+    planner = XArm6RobotiqMotionPlanningSolver(
         env,
         debug=debug,
         vis=vis,
@@ -54,7 +48,7 @@ def solve(env: PickCubeEnv, seed=None, debug=False, vis=False):
     # Grasp
     # -------------------------------------------------------------------------- #
     planner.move_to_pose_with_screw(grasp_pose)
-    planner.close_gripper()
+    planner.close_gripper(gripper_state=0.5)
 
     # -------------------------------------------------------------------------- #
     # Move to goal pose

@@ -21,6 +21,16 @@ def solve(env: DrawSVGEnv, seed=None, debug=False, vis=False):
 
     rot = list(env.agent.tcp.pose.get_q()[0].cpu().numpy())
     res = None
+
+    # -------------------------------------------------------------------------- #
+    # Move to just a little above the first vertex
+    # -------------------------------------------------------------------------- #
+
+    reach_pose = sapien.Pose(p=list(env.points[0, 0].numpy()), q=rot)
+    offset = sapien.Pose([0, 0, -0.05])
+    reach_pose = reach_pose * offset
+    res = planner.move_to_pose_with_screw(reach_pose)
+
     for i, point in enumerate(env.points[0]):
         reach_pose = sapien.Pose(p=list(point.cpu().numpy()), q=rot)
         res = planner.move_to_pose_with_screw(reach_pose)

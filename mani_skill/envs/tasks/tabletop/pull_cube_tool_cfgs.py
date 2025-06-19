@@ -1,0 +1,50 @@
+"""
+PullCubeTool-v1 task configurations for different robots.
+The configs below set the pull cube tool task parameters to ensure the cube is within reachable range
+and camera angles are appropriate for each robot type.
+"""
+
+PULL_CUBE_TOOL_CONFIGS = {
+    "panda": {
+        "goal_radius": 0.3,
+        "cube_half_size": 0.02,
+        "handle_length": 0.2,
+        "hook_length": 0.05,
+        "width": 0.05,
+        "height": 0.05,
+        "cube_size": 0.02,
+        "arm_reach": 0.35,
+        "sensor_cam_eye_pos": [0.3, 0, 0.5],
+        "sensor_cam_target_pos": [-0.1, 0, 0.1],
+        "human_cam_eye_pos": [0.6, 0.7, 0.6],
+        "human_cam_target_pos": [0.0, 0.0, 0.35],
+    },
+    "fetch": {
+        "goal_radius": 0.3,
+        "cube_half_size": 0.02,
+        "handle_length": 0.2,
+        "hook_length": 0.05,
+        "width": 0.05,
+        "height": 0.05,
+        "cube_size": 0.02,
+        "arm_reach": 0.35,
+        "sensor_cam_eye_pos": [0.3, 0, 0.5],
+        "sensor_cam_target_pos": [-0.1, 0, 0.1],
+        "human_cam_eye_pos": [0.6, 0.7, 0.6],
+        "human_cam_target_pos": [0.0, 0.0, 0.35],
+    },
+    "xarm6_robotiq": {
+        "goal_radius": 0.3,
+        "cube_half_size": 0.02,
+        "handle_length": 0.2,
+        "hook_length": 0.05,
+        "width": 0.05,
+        "height": 0.05,
+        "cube_size": 0.02,
+        "arm_reach": 0.35,
+        "sensor_cam_eye_pos": [0.3, 0, 0.5],
+        "sensor_cam_target_pos": [-0.1, 0, 0.1],
+        "human_cam_eye_pos": [0.6, 0.7, 0.6],
+        "human_cam_target_pos": [0.0, 0.0, 0.35],
+    },
+}

@@ -41,17 +41,10 @@ class TableSceneBuilder(SceneBuilder):
             p=[-0.12, 0, -0.9196429], q=euler2quat(0, 0, np.pi / 2)
         )
         table = builder.build_kinematic(name="table-workspace")
-        # aabb = (
-        #     table._objs[0]
-        #     .find_component_by_type(sapien.render.RenderBodyComponent)
-        #     .compute_global_aabb_tight()
-        # )
-        # value of the call above is saved below
-        aabb = np.array(
-            [
-                [-0.7402168, -1.2148621, -0.91964257],
-                [0.4688596, 1.2030163, 3.5762787e-07],
-            ]
+        aabb = (
+            table._objs[0]
+            .find_component_by_type(sapien.render.RenderBodyComponent)
+            .compute_global_aabb_tight()
         )
         self.table_length = aabb[1, 0] - aabb[0, 0]
         self.table_width = aabb[1, 1] - aabb[0, 1]
@@ -129,7 +122,10 @@ class TableSceneBuilder(SceneBuilder):
             "xarm6_allegro_left",
             "xarm6_allegro_right",
             "xarm6_robotiq",
+            "xarm6_robotiq_wristcam",
             "xarm6_nogripper",
+            "xarm6_stick",
+            "xarm6_stick_wristcam",
         ]:
             qpos = self.env.agent.keyframes["rest"].qpos
             qpos = (
@@ -249,7 +245,7 @@ class TableSceneBuilder(SceneBuilder):
         ):
             # Need to specify the robot qpos for each sub-scenes using tensor api
             pass
-        elif self.env.robot_uids == "panda_stick":
+        elif self.env.robot_uids in ["panda_stick", "panda_stick_wristcam"] :
             qpos = np.array(
                 [
                     0.0,

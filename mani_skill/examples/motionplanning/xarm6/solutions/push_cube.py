@@ -7,13 +7,8 @@ from mani_skill.examples.motionplanning.xarm6.motionplanner import \
 
 def solve(env: PushCubeEnv, seed=None, debug=False, vis=False):
     env.reset(seed=seed)
-    if env.unwrapped.robot_uids == "xarm6_robotiq":
-        planner_cls = XArm6RobotiqMotionPlanningSolver
-    elif env.unwrapped.robot_uids == "xarm6_pandagripper":
-        planner_cls = XArm6PandaGripperMotionPlanningSolver
-    else:
-        raise ValueError(f"Unsupported robot uid: {env.robot_uid}")
-    planner = planner_cls(
+
+    planner = XArm6RobotiqMotionPlanningSolver(
         env,
         debug=debug,
         vis=vis,
@@ -25,13 +20,19 @@ def solve(env: PushCubeEnv, seed=None, debug=False, vis=False):
     FINGER_LENGTH = 0.025
     env = env.unwrapped
     planner.close_gripper()
-    reach_pose = sapien.Pose(p=env.obj.pose.sp.p + np.array([-0.05, 0, 0]), q=env.agent.tcp.pose.sp.q)
+
+    reach_pose = sapien.Pose(p=env.obj.pose.sp.p + np.array([-0.05, 0, 0.1]), q=env.agent.tcp.pose.sp.q)
     planner.move_to_pose_with_RRTStar(reach_pose)
+
+    reach_pose = sapien.Pose(p=env.obj.pose.sp.p + np.array([-0.05, 0, 0]), q=env.agent.tcp.pose.sp.q)
+    planner.move_to_pose_with_screw(reach_pose)
 
     # -------------------------------------------------------------------------- #
     # Move to goal pose
     # -------------------------------------------------------------------------- #
     goal_pose = sapien.Pose(p=env.goal_region.pose.sp.p,q=env.agent.tcp.pose.sp.q)
+    offset = sapien.Pose([0, 0, -0.02])
+    goal_pose = goal_pose * offset
     res = planner.move_to_pose_with_screw(goal_pose)
 
     planner.close()

@@ -10,8 +10,9 @@ import os.path as osp
 from mani_skill.utils.wrappers.record import RecordEpisode
 from mani_skill.trajectory.merge_trajectory import merge_trajectories
 from mani_skill.examples.motionplanning.panda.solutions import solvePushCube, solvePickCube, solveStackCube, solvePegInsertionSide, solvePlugCharger, solvePullCubeTool, solveLiftPegUpright, solvePullCube, solveDrawTriangle, solveDrawSVG, solvePlaceSphere
-MP_SOLUTIONS = {
+MP_SOLUTIONS_LIST = {
     "DrawTriangle-v1": solveDrawTriangle,
+    "DrawSVG-v1": solveDrawSVG,
     "PickCube-v1": solvePickCube,
     "StackCube-v1": solveStackCube,
     "PegInsertionSide-v1": solvePegInsertionSide,
@@ -21,14 +22,40 @@ MP_SOLUTIONS = {
     "PullCubeTool-v1": solvePullCubeTool,
     "LiftPegUpright-v1": solveLiftPegUpright,
     "PullCube-v1": solvePullCube,
-    "DrawSVG-v1" : solveDrawSVG
 }
+ROBOT_UIDS_LIST = {
+    "PickCube-v1": "panda_wristcam",
+    "PushCube-v1": "panda_wristcam",
+    "StackCube-v1": "panda_wristcam",
+    "PlugCharger-v1": "panda_wristcam",
+    "PullCube-v1": "panda_wristcam",
+    "PullCubeTool-v1": "panda_wristcam",
+    "DrawTriangle-v1": "panda_stick_wristcam",
+    "DrawSVG-v1": "panda_stick_wristcam",
+    "PlaceSphere-v1": "panda_wristcam",
+    "LiftPegUpright-v1": "panda_wristcam",
+    "PegInsertionSide-v1": "panda_wristcam",
+}
+REWARD_MODE_LIST = {
+    "PickCube-v1": "dense",
+    "PushCube-v1": "dense",
+    "StackCube-v1": "dense",
+    "PlugCharger-v1": "dense",
+    "PullCube-v1": "dense",
+    "PullCubeTool-v1": "dense",
+    "DrawTriangle-v1": "sparse",
+    "DrawSVG-v1": "sparse",
+    "PlaceSphere-v1": "dense",
+    "LiftPegUpright-v1": "dense",
+    "PegInsertionSide-v1": "dense",
+}
+
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--env-id", type=str, default="PickCube-v1", help=f"Environment to run motion planning solver on. Available options are {list(MP_SOLUTIONS.keys())}")
+    parser.add_argument("-e", "--env-id", type=str, default="DrawTriangle-v1", help=f"Environment to run motion planning solver on. Available options are {list(MP_SOLUTIONS_LIST.keys())}")
     parser.add_argument("-o", "--obs-mode", type=str, default="none", help="Observation mode to use. Usually this is kept as 'none' as observations are not necesary to be stored, they can be replayed later via the mani_skill.trajectory.replay_trajectory script.")
     parser.add_argument("-n", "--num-traj", type=int, default=10, help="Number of trajectories to generate.")
-    parser.add_argument("--only-count-success", action="store_true", help="If true, generates trajectories until num_traj of them are successful and only saves the successful trajectories/videos")
+    parser.add_argument("--only-count-success", default=True, action="store_true", help="If true, generates trajectories until num_traj of them are successful and only saves the successful trajectories/videos")
     parser.add_argument("--reward-mode", type=str)
     parser.add_argument("-b", "--sim-backend", type=str, default="auto", help="Which simulation backend to use. Can be 'auto', 'cpu', 'gpu'")
     parser.add_argument("--render-mode", type=str, default="rgb_array", help="can be 'sensors' or 'rgb_array' which only affect what is saved to videos")
@@ -36,7 +63,7 @@ def parse_args(args=None):
     parser.add_argument("--save-video", action="store_true", help="whether or not to save videos locally")
     parser.add_argument("--traj-name", type=str, help="The name of the trajectory .h5 file that will be created.")
     parser.add_argument("--shader", default="default", type=str, help="Change shader used for rendering. Default is 'default' which is very fast. Can also be 'rt' for ray tracing and generating photo-realistic renders. Can also be 'rt-fast' for a faster but lower quality ray-traced renderer")
-    parser.add_argument("--record-dir", type=str, default="demos", help="where to save the recorded trajectories")
+    parser.add_argument("--record-dir", type=str, default="data/panda", help="where to save the recorded trajectories")
     parser.add_argument("--num-procs", type=int, default=1, help="Number of processes to use to help parallelize the trajectory replay process. This uses CPU multiprocessing and only works with the CPU simulation backend at the moment.")
     return parser.parse_args()
 
@@ -47,13 +74,15 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         obs_mode=args.obs_mode,
         control_mode="pd_joint_pos",
         render_mode=args.render_mode,
+        robot_uids=ROBOT_UIDS_LIST[env_id],
+        reward_mode=REWARD_MODE_LIST[env_id],
         sensor_configs=dict(shader_pack=args.shader),
         human_render_camera_configs=dict(shader_pack=args.shader),
         viewer_camera_configs=dict(shader_pack=args.shader),
         sim_backend=args.sim_backend
     )
-    if env_id not in MP_SOLUTIONS:
-        raise RuntimeError(f"No already written motion planning solutions for {env_id}. Available options are {list(MP_SOLUTIONS.keys())}")
+    if env_id not in MP_SOLUTIONS_LIST:
+        raise RuntimeError(f"No already written motion planning solutions for {env_id}. Available options are {list(MP_SOLUTIONS_LIST.keys())}")
 
     if not args.traj_name:
         new_traj_name = time.strftime("%Y%m%d_%H%M%S")
@@ -73,7 +102,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         save_on_reset=False
     )
     output_h5_path = env._h5_file.filename
-    solve = MP_SOLUTIONS[env_id]
+    solve = MP_SOLUTIONS_LIST[env_id]
     print(f"Motion Planning Running on {env_id}")
     pbar = tqdm(range(args.num_traj), desc=f"proc_id: {proc_id}")
     seed = start_seed

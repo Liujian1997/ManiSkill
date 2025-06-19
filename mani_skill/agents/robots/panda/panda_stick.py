@@ -9,6 +9,7 @@ import torch
 from mani_skill import PACKAGE_ASSET_DIR
 from mani_skill.agents.base_agent import BaseAgent, Keyframe
 from mani_skill.agents.controllers import *
+from mani_skill.sensors.camera import CameraConfig
 from mani_skill.agents.registration import register_agent
 from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.structs.actor import Actor
@@ -176,3 +177,33 @@ class PandaStick(BaseAgent):
     def is_static(self, threshold: float = 0.2):
         qvel = self.robot.get_qvel()[..., :-2]
         return torch.max(torch.abs(qvel), 1)[0] <= threshold
+
+
+@register_agent()
+class PandaStickWristCamera(PandaStick):
+    uid = "panda_stick_wristcam"
+
+    @property
+    def _sensor_configs(self):
+        return [
+            CameraConfig(
+                uid="hand_camera",
+                pose=sapien.Pose(p=[0, 0, 0], q=[1, 0, 0, 0]),
+                width=256,
+                height=256,
+                fov=np.pi / 2,
+                near=0.01,
+                far=100,
+                mount=self.robot.links_map["camera_link"],
+            ),
+            CameraConfig(
+                uid="third_view_camera",
+                pose=sapien_utils.look_at(eye=[0.4, 0.0, 0.3], target=[0.0, 0.0, 0.15]),
+                width=256,
+                height=256,
+                fov=1,
+                near=0.01,
+                far=100,
+                mount=None,  # 不绑定到任何连杆，固定在世界坐标系
+            ),
+        ]

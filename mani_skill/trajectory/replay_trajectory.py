@@ -32,7 +32,7 @@ from mani_skill.utils.wrappers.record import RecordEpisode
 
 @dataclass
 class Args:
-    traj_path: str
+    traj_path: str = "/home/wangzhibin/ManiSkill-main/mani_skill/examples/motionplanning/xarm6/data/xarm6/DrawTriangle-v1/motionplanning/trajectory_xarm6.h5"
     """Path to the trajectory .h5 file to replay"""
     sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = None
     """Which simulation backend to use. Can be 'physx_cpu', 'physx_gpu'. If not specified the backend used is the same as the one used to collect the trajectory data."""
@@ -80,7 +80,7 @@ class Args:
     render_mode: str = "rgb_array"
     """The render mode used for saving videos. Typically there is also 'sensors' and 'all' render modes which further render all sensor outputs like cameras."""
 
-    num_envs: Annotated[int, tyro.conf.arg(aliases=["-n"])] = 1
+    num_envs: Annotated[int, tyro.conf.arg(aliases=["-n"])] = 10
     """Number of environments to run to replay trajectories. With CPU backends typically this is parallelized via python multiprocessing.
     For parallelized simulation backends like physx_gpu, this is parallelized within a single python process by leveraging the GPU."""
 

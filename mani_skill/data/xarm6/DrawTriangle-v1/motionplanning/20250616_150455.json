@@ -1,0 +1,39 @@
+{
+  "env_info": {
+    "env_id": "DrawTriangle-v1",
+    "env_kwargs": {
+      "obs_mode": "none",
+      "control_mode": "pd_joint_pos",
+      "render_mode": "rgb_array",
+      "robot_uids": "xarm6_stick",
+      "reward_mode": "sparse",
+      "sensor_configs": {
+        "shader_pack": "default"
+      },
+      "human_render_camera_configs": {
+        "shader_pack": "default"
+      },
+      "viewer_camera_configs": {
+        "shader_pack": "default"
+      },
+      "sim_backend": "cpu"
+    },
+    "max_episode_steps": 300
+  },
+  "commit_info": null,
+  "episodes": [
+    {
+      "episode_id": 0,
+      "episode_seed": 0,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 281,
+      "reset_kwargs": {
+        "options": {},
+        "seed": 0
+      },
+      "success": true
+    }
+  ],
+  "source_type": "motionplanning",
+  "source_desc": "official motion planning solution from ManiSkill contributors"
+}

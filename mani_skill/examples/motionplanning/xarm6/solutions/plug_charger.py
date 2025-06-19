@@ -32,13 +32,8 @@ def solve(env: PlugChargerEnv, seed=None, debug=False, vis=False):
         "pd_joint_pos",
         "pd_joint_pos_vel",
     ], env.unwrapped.control_mode
-    if env.unwrapped.robot_uids == "xarm6_robotiq":
-        planner_cls = XArm6RobotiqMotionPlanningSolver
-    elif env.unwrapped.robot_uids == "xarm6_pandagripper":
-        planner_cls = XArm6PandaGripperMotionPlanningSolver
-    else:
-        raise ValueError(f"Unsupported robot uid: {env.robot_uid}")
-    planner = planner_cls(
+
+    planner = XArm6RobotiqMotionPlanningSolver(
         env,
         debug=debug,
         vis=vis,

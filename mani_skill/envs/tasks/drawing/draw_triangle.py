@@ -1,5 +1,5 @@
 import math
-from typing import Dict
+from typing import Any, Dict, Union
 
 import numpy as np
 import sapien
@@ -8,6 +8,7 @@ from transforms3d.euler import euler2quat
 
 import mani_skill.envs.utils.randomization as randomization
 from mani_skill.agents.robots.panda.panda_stick import PandaStick
+from mani_skill.agents.robots.xarm6.xarm6_nogripper import XArm6NoGripper
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import sapien_utils
@@ -35,7 +36,7 @@ class DrawTriangleEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/DrawTriangle-v1_rt.mp4"
 
-    MAX_DOTS = 300
+    MAX_DOTS = 500
     """
     The total "ink" available to use and draw with before you need to call env.reset. NOTE that on GPU simulation it is not recommended to have a very high value for this as it can slow down rendering
     when too many objects are being rendered in many scenes.
@@ -52,8 +53,8 @@ class DrawTriangleEnv(BaseEnv):
 
     SUPPORTED_REWARD_MODES = ["sparse"]
 
-    SUPPORTED_ROBOTS: ["panda_stick"]  # type: ignore
-    agent: PandaStick
+    SUPPORTED_ROBOTS = ["panda_stick", "xarm6_stick"]  # type: ignore
+    agent: Union[PandaStick, XArm6NoGripper]
 
     def __init__(self, *args, robot_uids="panda_stick", **kwargs):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -101,7 +102,7 @@ class DrawTriangleEnv(BaseEnv):
         )
 
     def _load_agent(self, options: dict):
-        super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
+        super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0.1]))
 
     def _load_scene(self, options: dict):
 
@@ -226,7 +227,7 @@ class DrawTriangleEnv(BaseEnv):
             name="goal_tri",
             base_color=np.array([10, 10, 10, 255]) / 255,
         )
-        self.dots_dist = torch.ones((self.num_envs, 300), device=self.device) * -1
+        self.dots_dist = torch.ones((self.num_envs, self.MAX_DOTS), device=self.device) * -1
         self.ref_dist = torch.zeros((self.num_envs, 153), device=self.device).to(bool)
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
@@ -264,7 +265,7 @@ class DrawTriangleEnv(BaseEnv):
                 50, self.vertices[:, :, :-1]
             )
 
-            self.dots_dist[env_idx] = torch.ones((b, 300)) * -1
+            self.dots_dist[env_idx] = torch.ones((b, self.MAX_DOTS)) * -1
             self.ref_dist[env_idx] = torch.zeros((b, 153)).to(bool)
 
             for dot in self.dots:

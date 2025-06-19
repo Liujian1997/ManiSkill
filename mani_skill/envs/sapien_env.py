@@ -14,7 +14,6 @@ import sapien.utils.viewer.control_window
 import torch
 from gymnasium.vector.utils import batch_space
 
-import mani_skill.render.utils as render_utils
 from mani_skill import logger
 from mani_skill.agents import REGISTERED_AGENTS
 from mani_skill.agents.base_agent import BaseAgent
@@ -727,11 +726,11 @@ class BaseEnv(gym.Env):
         self._load_agent(options)
 
         self._load_scene(options)
-        if self.scene.can_render(): self._load_lighting(options)
+        self._load_lighting(options)
 
         self.scene._setup(enable_gpu=self.gpu_sim_enabled)
         # for GPU sim, we have to setup sensors after we call setup gpu in order to enable loading mounted sensors as they depend on GPU buffer data
-        if self.scene.can_render(): self._setup_sensors(options)
+        self._setup_sensors(options)
         if self.render_mode == "human" and self._viewer is None:
             self._viewer = create_viewer(self._viewer_camera_config)
         if self._viewer is not None:
@@ -1154,11 +1153,8 @@ class BaseEnv(gym.Env):
                     scene_idx % scene_grid_length - scene_grid_length // 2,
                     scene_idx // scene_grid_length - scene_grid_length // 2,
                 )
-                systems = [physx_system]
-                if render_utils.can_render(self._render_device):
-                    systems.append(sapien.render.RenderSystem(self._render_device))
                 scene = sapien.Scene(
-                    systems=systems
+                    systems=[physx_system, sapien.render.RenderSystem(self._render_device)]
                 )
                 physx_system.set_scene_offset(
                     scene,
@@ -1171,11 +1167,8 @@ class BaseEnv(gym.Env):
                 sub_scenes.append(scene)
         else:
             physx_system = physx.PhysxCpuSystem()
-            systems = [physx_system]
-            if render_utils.can_render(self._render_device):
-                systems.append(sapien.render.RenderSystem(self._render_device))
             sub_scenes = [
-                sapien.Scene(systems)
+                sapien.Scene([physx_system, sapien.render.RenderSystem(self._render_device)])
             ]
         # create a "global" scene object that users can work with that is linked with all other scenes created
         self.scene = ManiSkillScene(
@@ -1186,9 +1179,6 @@ class BaseEnv(gym.Env):
             backend=self.backend
         )
         self.scene.px.timestep = 1.0 / self._sim_freq
-        if not self.scene.can_render():
-            if self.render_mode is not None:
-                logger.warning(f'The chosen render mode is "{self.render_mode}", but selected rendering device "{self.scene.backend.render_device}" does not support rendering')
 
     def _clear(self):
         """Clear the simulation scene instance and other buffers.
@@ -1234,11 +1224,7 @@ class BaseEnv(gym.Env):
         """
         Get environment state dictionary. Override to include task information (e.g., goal)
         """
-        sim_state = self.scene.get_sim_state()
-        controller_state = self.agent.controller.get_state()
-        if len(controller_state) > 0:
-            sim_state["controller"] = controller_state
-        return sim_state
+        return self.scene.get_sim_state()
 
     def get_state(self):
         """

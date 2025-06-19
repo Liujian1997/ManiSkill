@@ -4,7 +4,8 @@ import numpy as np
 import sapien
 import torch
 
-from mani_skill.agents.robots.panda import PandaWristCam
+from mani_skill.agents.robots import PandaWristCam
+from mani_skill.agents.robots import XArm6RobotiqWristCamera
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.scene import ManiSkillScene
 from mani_skill.envs.utils import randomization
@@ -64,8 +65,8 @@ class PegInsertionSideEnv(BaseEnv):
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PegInsertionSide-v1_rt.mp4"
-    SUPPORTED_ROBOTS = ["panda_wristcam"]
-    agent: Union[PandaWristCam]
+    SUPPORTED_ROBOTS = ["panda_wristcam", "xarm6_robotiq_wristcam"]
+    agent: Union[PandaWristCam, XArm6RobotiqWristCamera]
     _clearance = 0.003
 
     def __init__(
@@ -228,24 +229,35 @@ class PegInsertionSideEnv(BaseEnv):
             )
             self.box.set_pose(Pose.create_from_pq(pos, quat))
 
-            # Initialize the robot
-            qpos = np.array(
-                [
-                    0.0,
-                    np.pi / 8,
-                    0,
-                    -np.pi * 5 / 8,
-                    0,
-                    np.pi * 3 / 4,
-                    -np.pi / 4,
-                    0.04,
-                    0.04,
-                ]
-            )
-            qpos = self._episode_rng.normal(0, 0.02, (b, len(qpos))) + qpos
-            qpos[:, -2:] = 0.04
+            # Initialize the robot with robot-specific initial states
+            if self.agent.uid == "panda_wristcam":
+                qpos = np.array(
+                    [
+                        0.0,
+                        np.pi / 8,
+                        0,
+                        -np.pi * 5 / 8,
+                        0,
+                        np.pi * 3 / 4,
+                        -np.pi / 4,
+                        0.04,
+                        0.04,
+                    ]
+                )
+                noise = self._episode_rng.normal(0, 0.02, (b, len(qpos)))
+                qpos = noise + qpos
+                qpos[:, -2:] = 0.04  # Ensure gripper starts open
+            elif self.agent.uid == "xarm6_robotiq_wristcam":
+                # Rest position for arm, open gripper
+                base_qpos = np.array(
+                    [0, 0.22, -1.23, 0, 1.01, 0, 0, 0, 0, 0, 0, 0]
+                )
+                noise = self._episode_rng.normal(0, 0.02, (b, 6))  # Only for arm joints
+                qpos = np.tile(base_qpos, (b, 1))
+                qpos[:, :6] += noise  # Add noise to arm joints
+                qpos[:, 6:] = 0  # Ensure gripper starts open
+
             self.agent.robot.set_qpos(qpos)
-            self.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
 
     # save some commonly used attributes
     @property
@@ -298,28 +310,33 @@ class PegInsertionSideEnv(BaseEnv):
         return obs
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        # Stage 1: Encourage gripper to be rotated to be lined up with the peg
+        # Robot-agnostic offset based on peg size
+        peg_half_size = self.peg_half_sizes[:, 0]
+        offset_p = torch.stack(
+            [
+                -peg_half_size,
+                torch.zeros_like(peg_half_size),
+                torch.zeros_like(peg_half_size),
+            ],
+            dim=1,
+        )
+        offset_pose = Pose.create_from_pq(p=offset_p)
 
+        # Stage 1: Encourage gripper to be rotated to be lined up with the peg
         # Stage 2: Encourage gripper to move close to peg tail and grasp it
         gripper_pos = self.agent.tcp.pose.p
-        tgt_gripper_pose = self.peg.pose
-        offset = sapien.Pose(
-            [-0.06, 0, 0]
-        )  # account for panda gripper width with a bit more leeway
-        tgt_gripper_pose = tgt_gripper_pose * (offset)
+        tgt_gripper_pose = self.peg.pose * offset_pose
         gripper_to_peg_dist = torch.linalg.norm(
             gripper_pos - tgt_gripper_pose.p, axis=1
         )
 
         reaching_reward = 1 - torch.tanh(4.0 * gripper_to_peg_dist)
 
-        # check with max_angle=20 to ensure gripper isn't grasping peg at an awkward pose
+        # Check grasp with max_angle=20
         is_grasped = self.agent.is_grasping(self.peg, max_angle=20)
         reward = reaching_reward + is_grasped
 
         # Stage 3: Orient the grasped peg properly towards the hole
-
-        # pre-insertion award, encouraging both the peg center and the peg head to match the yz coordinates of goal_pose
         peg_head_wrt_goal = self.goal_pose.inv() * self.peg_head_pose
         peg_head_wrt_goal_yz_dist = torch.linalg.norm(
             peg_head_wrt_goal.p[:, 1:], axis=1
@@ -335,12 +352,11 @@ class PegInsertionSideEnv(BaseEnv):
             )
         )
         reward += pre_insertion_reward * is_grasped
-        # stage 3 passes if peg is correctly oriented in order to insert into hole easily
         pre_inserted = (peg_head_wrt_goal_yz_dist < 0.01) & (
             peg_wrt_goal_yz_dist < 0.01
         )
 
-        # Stage 4: Insert the peg into the hole once it is grasped and lined up
+        # Stage 4: Insert the peg into the hole
         peg_head_wrt_goal_inside_hole = self.box_hole_pose.inv() * self.peg_head_pose
         insertion_reward = 5 * (
             1
