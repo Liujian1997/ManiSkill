@@ -1,99 +1,289 @@
-# ManiSkill 3 (Beta)
+# ManiSkill with Panda, XArm6
 
+## 借鉴Panda扩充XArm6的任务
 
-![teaser](figures/teaser.jpg)
-<p style="text-align: center; font-size: 0.8rem; color: #999;margin-top: -1rem;">Sample of environments/robots rendered with ray-tracing. Scene datasets sourced from AI2THOR and ReplicaCAD</p>
+借鉴基于Panda机械臂的数据生成流程，为XArm6机械臂编写代码使其可以完成和Panda一样多的任务
+包括：PickCube-v1, PushCube-v1, StackCube-v1, PullCube-v1, PullCubeTool-v1, PlaceSphere-v1, LiftPegUpright-v1, PegInsertionSide-v1, DrawTriangle-v1, DrawSVG-v1
+由于成功率太低，PulgCharger-v1被抛弃
 
-[![Downloads](https://static.pepy.tech/badge/mani_skill)](https://pepy.tech/project/mani_skill)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/haosulab/ManiSkill/blob/main/examples/tutorials/1_quickstart.ipynb)
-[![PyPI version](https://badge.fury.io/py/mani-skill.svg)](https://badge.fury.io/py/mani-skill)
-[![Docs status](https://img.shields.io/badge/docs-passing-brightgreen.svg)](https://maniskill.readthedocs.io/en/latest/)
-[![Discord](https://img.shields.io/discord/996566046414753822?logo=discord)](https://discord.gg/x8yUZe5AdN)
+涉及集成文件urdf、机器人代码、运动规划代码、任务环境代码、任务解决方案代码的撰写
 
-ManiSkill is a powerful unified framework for robot simulation and training powered by [SAPIEN](https://sapien.ucsd.edu/), with a strong focus on manipulation skills. The entire tech stack is as open-source as possible and ManiSkill v3 is in beta release now. Among its features include:
-- GPU parallelized visual data collection system. On the high end you can collect RGBD + Segmentation data at 30,000+ FPS with a 4090 GPU!
-- GPU parallelized simulation, enabling high throughput state-based synthetic data collection in simulation
-- GPU parallelized heterogeneous simulation, where every parallel environment has a completely different scene/set of objects
-- Example tasks cover a wide range of different robot embodiments (humanoids, mobile manipulators, single-arm robots) as well as a wide range of different tasks (table-top, drawing/cleaning, dextrous manipulation)
-- Flexible and simple task building API that abstracts away much of the complex GPU memory management code via an object oriented design
-- Real2sim environments for scalably evaluating real-world policies 100x faster via GPU simulation.
-- Many tuned robot learning baselines in Reinforcement Learning (e.g. PPO, SAC, [TD-MPC2](https://github.com/nicklashansen/tdmpc2)), Imitation Learning (e.g. Behavior Cloning, [Diffusion Policy](https://github.com/real-stanford/diffusion_policy)), and large Vision Language Action (VLA) models (e.g. [Octo](https://github.com/octo-models/octo), [RDT-1B](https://github.com/thu-ml/RoboticsDiffusionTransformer), [RT-x](https://robotics-transformer-x.github.io/))
+### 任务列表
 
-For more details we encourage you to take a look at our [paper](https://arxiv.org/abs/2410.00425), published at [RSS 2025](https://roboticsconference.org/).
+#### ✅ pull_cube
 
-There are more features to be added to ManiSkill 3, see [our roadmap](https://maniskill.readthedocs.io/en/latest/roadmap/index.html) for planned features that will be added over time before the official v3 is released.
+> **urdf**
+> 
 
-Please refer to our [documentation](https://maniskill.readthedocs.io/en/latest/user_guide) to learn more information from tutorials on building tasks to data collection.
+/
 
-**NOTE:**
-This project currently is in a **beta release**, so not all features have been added in yet and there may be some bugs. If you find any bugs or have any feature requests please post them to our [GitHub issues](https://github.com/haosulab/ManiSkill/issues/) or discuss about them on [GitHub discussions](https://github.com/haosulab/ManiSkill/discussions/). We also have a [Discord Server](https://discord.gg/x8yUZe5AdN) through which we make announcements and discuss about ManiSkill.
+> **机器人代码**
+> 
 
-Users looking for the original ManiSkill2 can find the commit for that codebase at the [v0.5.3 tag](https://github.com/haosulab/ManiSkill/tree/v0.5.3)
+/
 
+> **运动规划代码**
+> 
 
-## Installation
-Installation of ManiSkill is extremely simple, you only need to run a few pip installs and setup Vulkan for rendering.
+/
 
-```bash
-# install the package
-pip install --upgrade mani_skill
-# install a version of torch that is compatible with your system
-pip install torch
-```
+> **任务环境代码**
+> 
 
-Finally you also need to set up Vulkan with [instructions here](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/installation.html#vulkan)
+/
 
-For more details about installation (e.g. from source, or doing troubleshooting) see [the documentation](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/installation.html
-)
+> **任务解决方案代码**
+> 
+- 将panda的motionplanner修改为xarm6
+- 最终点需要稍微上移，否则xarm的夹爪会触底然后崩开
+- 最开始运动到立方体后部前加一个动作移动到立方体后部上方，否则夹爪可能对立方体有碰撞
 
-## Getting Started
+#### ✅ place_sphere
 
-To get started, check out the quick start documentation: https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/quickstart.html
+> **urdf**
+> 
 
-We also have a quick start [colab notebook](https://colab.research.google.com/github/haosulab/ManiSkill/blob/main/examples/tutorials/1_quickstart.ipynb) that lets you try out GPU parallelized simulation without needing your own hardware. Everything is runnable on Colab free tier.
+/
 
-For a full list of example scripts you can run, see [the docs](https://maniskill.readthedocs.io/en/latest/user_guide/demos/index.html).
+> **机器人代码**
+> 
 
-## System Support
+/
 
-We currently best support Linux based systems. There is limited support for windows and no support for MacOS at the moment. We are working on trying to support more features on other systems but this may take some time. Most constraints stem from what the [SAPIEN](https://github.com/haosulab/SAPIEN/) package is capable of supporting.
+> **运动规划代码**
+> 
 
-| System / GPU         | CPU Sim | GPU Sim | Rendering |
-| -------------------- | ------- | ------- | --------- |
-| Linux / NVIDIA GPU   | ✅      | ✅      | ✅        |
-| Windows / NVIDIA GPU | ✅      | ❌      | ✅        |
-| Windows / AMD GPU    | ✅      | ❌      | ✅        |
-| WSL / Anything       | ✅      | ❌      | ❌        |
-| MacOS / Anything     | ✅      | ❌      | ✅        |
+/
 
-## Citation
+> **任务环境代码**
+> 
 
+/
 
-If you use ManiSkill3 (versions `mani_skill>=3.0.0`) in your work please cite our [ManiSkill3 paper](https://arxiv.org/abs/2410.00425) as so:
+> **任务解决方案代码**
+> 
 
-```
-@article{taomaniskill3,
-  title={ManiSkill3: GPU Parallelized Robotics Simulation and Rendering for Generalizable Embodied AI},
-  author={Stone Tao and Fanbo Xiang and Arth Shukla and Yuzhe Qin and Xander Hinrichsen and Xiaodi Yuan and Chen Bao and Xinsong Lin and Yulin Liu and Tse-kai Chan and Yuan Gao and Xuanlin Li and Tongzhou Mu and Nan Xiao and Arnav Gurha and Viswesh Nagaswamy Rajesh and Yong Woo Choi and Yen-Ru Chen and Zhiao Huang and Roberto Calandra and Rui Chen and Shan Luo and Hao Su},
-  journal = {Robotics: Science and Systems},
-  year={2025},
-} 
-```
+将panda的motionplanner修改为xarm6，“Reach”部分改为`move_to_pose_with_RRTStar`
 
-If you use ManiSkill2 (version `mani_skill==0.5.3` or lower) in your work please cite the ManiSkill2 paper as so:
-```
-@inproceedings{gu2023maniskill2,
-  title={ManiSkill2: A Unified Benchmark for Generalizable Manipulation Skills},
-  author={Gu, Jiayuan and Xiang, Fanbo and Li, Xuanlin and Ling, Zhan and Liu, Xiqiang and Mu, Tongzhou and Tang, Yihe and Tao, Stone and Wei, Xinyue and Yao, Yunchao and Yuan, Xiaodi and Xie, Pengwei and Huang, Zhiao and Chen, Rui and Su, Hao},
-  booktitle={International Conference on Learning Representations},
-  year={2023}
-}
-```
+#### ✅ pull_cube_tool
 
-Note that some other assets, algorithms, etc. in ManiSkill are from other sources/research. We try our best to include the correct citation bibtex where possible when introducing the different components provided by ManiSkill.
+> **urdf**
+> 
 
-## License
+/
 
-All rigid body environments in ManiSkill are licensed under fully permissive licenses (e.g., Apache-2.0).
+> **机器人代码**
+> 
 
-The assets are licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
+将xarm6_robotiq.py中的
+`gripper_force_limit` 修改为`10.0`
+
+> **运动规划代码**
+> 
+
+/
+
+> **任务环境代码**
+> 
+
+/
+
+> **任务解决方案代码**
+> 
+- 将panda的motionplanner修改为xarm6，“Reach”部分改为`move_to_pose_with_RRTStar`
+- 将`planner.close_gripper()`的`gripper_state` 设为`0.95`
+
+#### ✅ pick_cube
+
+> **urdf**
+> 
+
+/
+
+> **机器人代码**
+> 
+
+/
+
+> **运动规划代码**
+> 
+
+/
+
+> **任务环境代码**
+> 
+
+修改任务成功的条件，机械臂只需要将物体提起即可，而非提起并移动到绿色目标点
+
+> **任务解决方案代码**
+> 
+- 由于修改了xarm6_robotiq.py中的
+`gripper_force_limit` ，我们需要将`planner.close_gripper()`的`gripper_state` 设为`0.5`
+
+#### ✅ stack_cube
+
+> **urdf**
+> 
+
+/
+
+> **机器人代码**
+> 
+
+/
+
+> **运动规划代码**
+> 
+
+/
+
+> **任务环境代码**
+> 
+
+/
+
+> **任务解决方案代码**
+> 
+- 由于修改了xarm6_robotiq.py中的
+`gripper_force_limit` ，我们需要将`planner.close_gripper()`的`gripper_state` 设为`0.5`
+
+#### ✅ draw_triangle
+
+- 注意在这个任务下，`mani_skill/examples/motionplanning/xarm6/run.py`中`—-reward mode`要改成`sparse`
+
+> **urdf**
+> 
+
+借鉴panda_stick.urdf与xarm6_robotiq.urdf编写xarm6_stick.urdf，创建一个带stick的xarm6机械臂集成文件
+
+> **机器人代码**
+> 
+- 借鉴panda_stick.py与xarm6_robotiq.py编写xarm6_stick.py，创建一个带stick的xarm6机械臂代码
+- 由于创建了新的机器人，所以需要在`mani_skill/utils/scene_builder/table/scene_builder.py` 中添加robot的初始化pose
+
+> **运动规划代码**
+> 
+
+借鉴panda_stick.py与xarm6_robotiq.py编写xarm6_stick.py，创建一个带stick的xarm6机械臂动作规划代码
+
+> **任务环境代码**
+> 
+- xarm6需要的迭代步数更多，将`max_episode_steps` （与变量`MAX_DOTS`）从`300`修改为`500`，否则会报错
+
+> **任务解决方案代码**
+> 
+- 将panda的motionplanner修改为编写好的xarm6_stick
+- 加了一个动作，先移动到三角形第一个点的正上方位置，然后下降开始画图，而非直接移动到三角形的第一个点
+
+#### ✅ draw_svg
+
+- 注意在这个任务下，`mani_skill/examples/motionplanning/xarm6/run.py`中`—-reward mode`要改成`sparse`
+
+> **urdf**
+> 
+
+使用编写好的xarm6_stick.urdf
+
+> **机器人代码**
+> 
+
+使用编写好的xarm6_stick.py
+
+> **运动规划代码**
+> 
+
+使用编写好的xarm6_stick.py
+
+> **任务环境代码**
+> 
+- xarm6需要的迭代步数更多，将`max_episode_steps` （与变量`MAX_DOTS`）从`500`修改为`1000`，否则会报错
+
+> **任务解决方案代码**
+> 
+- 将panda的motionplanner修改为编写好的xarm6_stick
+- 加了一个动作，先移动到svg第一个点的正上方位置，然后下降开始画图，而非直接移动到svg的第一个点
+
+#### ✅ lift_peg_upright
+
+> **urdf**
+> 
+
+/
+
+> **机器人代码**
+> 
+
+将xarm6_robotiq.py中的
+`gripper_force_limit` 修改为`10.0`
+
+> **运动规划代码**
+> 
+
+/
+
+> **任务环境代码**
+> 
+
+/
+
+> **任务解决方案代码**
+> 
+- 将panda的motionplanner修改为xarm6，“Reach”部分改为`move_to_pose_with_RRTStar`
+- 抓手`gripper_state`改为`0.4`
+- 机械旋转角度需要微调，`theta` 从`np.pi/10` 调至`np.pi/15`
+- 机械臂下降时高度需要低一点，`lower_pose` 从`sapien.Pose([0, 0, -0.10])` 调至`sapien.Pose([0, 0, -0.12])`
+
+#### ✅ peg_insertion_side
+
+> **urdf**
+> 
+
+/
+
+> **机器人代码**
+> 
+
+将xarm6_robotiq.py中的
+`gripper_force_limit` 修改为`10.0`
+
+> **运动规划代码**
+> 
+
+/
+
+> **任务环境代码**
+> 
+- xarm6与panda有不同的qpos初始化
+
+> **任务解决方案代码**
+> 
+- 将panda的motionplanner修改为xarm6，“Reach”部分改为`move_to_pose_with_RRTStar`
+
+#### ✅ push_cube
+
+> **urdf**
+> 
+
+/
+
+> **机器人代码**
+> 
+
+/
+
+> **运动规划代码**
+> 
+
+/
+
+> **任务环境代码**
+> 
+
+原始任务的目标点对于xarm6的机械臂会存在太远的情况导致夹爪无法到达目标点，需要缩小范围
+
+> **任务解决方案代码**
+> 
+- 将panda的motionplanner修改为xarm6
+- 最终点需要稍微上移，否则xarm的夹爪会触底然后崩开
+- 最开始运动到立方体后部前加一个动作移动到立方体后部上方，否则夹爪可能对立方体有碰撞
+
