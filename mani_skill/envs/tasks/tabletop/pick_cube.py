@@ -146,16 +146,15 @@ class PickCubeEnv(BaseEnv):
         return obs
 
     def evaluate(self):
-        # is_obj_placed = (
-        #     torch.linalg.norm(self.goal_site.pose.p - self.cube.pose.p, axis=1)
-        #     <= self.goal_thresh
-        # )
+        is_obj_placed = (
+            torch.linalg.norm(self.cube.pose.p[:, 2] - self.cube_half_size, axis=0)
+            >= self.goal_thresh
+        )
         is_grasped = self.agent.is_grasping(self.cube)
         is_robot_static = self.agent.is_static(0.2)
         return {
-            # "success": is_obj_placed & is_robot_static,
-            "success": is_robot_static,
-            # "is_obj_placed": is_obj_placed,
+            "success": is_obj_placed,
+            "is_obj_placed": is_obj_placed,
             "is_robot_static": is_robot_static,
             "is_grasped": is_grasped,
         }
