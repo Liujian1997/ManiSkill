@@ -147,7 +147,7 @@ class PickCubeEnv(BaseEnv):
 
     def evaluate(self):
         is_obj_placed = (
-            torch.linalg.norm(self.cube.pose.p[:, 2] - self.cube_half_size, axis=0)
+            torch.linalg.norm(self.cube.pose.p[:, 2] - torch.tensor(self.cube_half_size).unsqueeze(0).expand(self.cube.pose.p.shape[0], -1).to(self.device), axis=0)
             >= self.goal_thresh
         )
         is_grasped = self.agent.is_grasping(self.cube)
