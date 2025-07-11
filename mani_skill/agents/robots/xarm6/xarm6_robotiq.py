@@ -447,7 +447,7 @@ class XArm6RobotiqWristCamera(XArm6Robotiq):
             ),
             CameraConfig(
                 uid="third_view_camera",
-                pose=sapien_utils.look_at(eye=[0.4, 0.0, 0.3], target=[0.0, 0.0, 0.15]),
+                pose=sapien_utils.look_at(eye=[0.5, -0.5, 0.4], target=[0.0, 0.0, 0.15]),
                 width=256,
                 height=256,
                 fov=1,
