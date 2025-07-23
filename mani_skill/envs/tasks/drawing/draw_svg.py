@@ -34,7 +34,7 @@ class DrawSVGEnv(BaseEnv):
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/DrawSVG-v1_rt.mp4"
 
 
-    MAX_DOTS = 1000
+    MAX_DOTS = 1500
     """
     The total "ink" available to use and draw with before you need to call env.reset. NOTE that on GPU simulation it is not recommended to have a very high value for this as it can slow down rendering
     when too many objects are being rendered in many scenes.
@@ -258,7 +258,7 @@ class DrawSVGEnv(BaseEnv):
             base_color=np.array([10, 10, 10, 255]) / 255,
         )
 
-        self.dots_dist = torch.ones((self.num_envs, 1000), device=self.device) * -1
+        self.dots_dist = torch.ones((self.num_envs, self.MAX_DOTS), device=self.device) * -1
         self.ref_dist = torch.zeros(
             (self.num_envs, self.original_points.shape[0]), device=self.device
         ).to(bool)
@@ -293,7 +293,7 @@ class DrawSVGEnv(BaseEnv):
                 -1, -2
             )  # rotation matrix
             self.points[env_idx] += target_pos.unsqueeze(1)
-            self.dots_dist[env_idx] = torch.ones((self.num_envs, 1000)) * -1
+            self.dots_dist[env_idx] = torch.ones((self.num_envs, self.MAX_DOTS)) * -1
             self.ref_dist[env_idx] = torch.zeros(
                 (self.num_envs, self.original_points.shape[0])
             ).to(bool)
