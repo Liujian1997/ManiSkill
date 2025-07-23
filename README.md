@@ -248,3 +248,5 @@ mani_skill/
 └── utils/scene_builder/            # 场景配置扩展
 ```
 
+# ManiSkill with XArm7 and WidowXAI: 任务迁移与优化
+
