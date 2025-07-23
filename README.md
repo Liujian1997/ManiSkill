@@ -113,16 +113,16 @@ The assets are licensed under [CC BY-NC 4.0](https://creativecommons.org/license
 ## **任务概览**
 | 任务名称 | 状态 | 关键修改点 | 成功率提升策略 |
 |----------|------|------------|----------------|
-| [PullCube-v1](#-pull_cube) | ✅ | 运动规划调整 | 最终点上移避免触底 |
-| [PlaceSphere-v1](#-place_sphere) | ✅ | 运动规划算法替换 | 使用RRT*优化路径 |
-| [PullCubeTool-v1](#-pull_cube_tool) | ✅ | 夹爪参数调整 | 夹爪力度提升至10N |
-| [PickCube-v1](#-pick_cube) | ✅ | 成功条件简化 | 仅需提起物体 |
-| [StackCube-v1](#-stack_cube) | ✅ | 夹爪控制优化 | 闭合度设为0.5 |
-| [DrawTriangle-v1](#-draw_triangle) | ✅ | 专用工具开发 | 新增stick末端执行器 |
-| [DrawSVG-v1](#-draw_svg) | ✅ | 步数扩展 | max_steps提升至1000 |
-| [LiftPegUpright-v1](#-lift_peg_upright) | ✅ | 运动参数微调 | 旋转角度降低至π/15 |
-| [PegInsertionSide-v1](#-peg_insertion_side) | ✅ | 初始化配置适配 | 定制化qpos初始化 |
-| [PushCube-v1](#-push_cube) | ✅ | 工作空间优化 | 目标点范围缩小 |
+| [PullCube-v1](#PullCube-v1) | ✅ | 运动规划调整 | 最终点上移避免触底 |
+| [PlaceSphere-v1](#-PlaceSphere-v1) | ✅ | 运动规划算法替换 | 使用RRT*优化路径 |
+| [PullCubeTool-v1](#PullCubeTool-v1) | ✅ | 夹爪参数调整 | 夹爪力度提升至10N |
+| [PickCube-v1](#PickCube-v1) | ✅ | 成功条件简化 | 仅需提起物体 |
+| [StackCube-v1](#StackCube-v1) | ✅ | 夹爪控制优化 | 闭合度设为0.5 |
+| [DrawTriangle-v1](#DrawTriangle-v1) | ✅ | 专用工具开发 | 新增stick末端执行器 |
+| [DrawSVG-v1](#DrawSVG-v1) | ✅ | 步数扩展 | max_steps提升至1000 |
+| [LiftPegUpright-v1](#LiftPegUpright-v1) | ✅ | 运动参数微调 | 旋转角度降低至π/15 |
+| [PegInsertionSide-v1](#PegInsertionSide-v1) | ✅ | 初始化配置适配 | 定制化qpos初始化 |
+| [PushCube-v1](#PushCube-v1) | ✅ | 工作空间优化 | 目标点范围缩小 |
 
 ---
 
