@@ -18,6 +18,7 @@ class WidowXAI(BaseAgent):
     urdf_path = f"{ASSET_DIR}/robots/widowxai/wxai_base.urdf"
     urdf_config = dict(
         _materials=dict(
+            # gripper=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0)
             gripper=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0)
         ),
         link=dict(
@@ -55,18 +56,17 @@ class WidowXAI(BaseAgent):
         "joint_3",
         "joint_4",
         "joint_5",
-        "left_carriage_joint",
     ]
     gripper_joint_names = [
         # only control the control joint, not the mimicked one
-        # "right_carriage_joint",
         "left_carriage_joint",
+        "right_carriage_joint",
     ]
     ee_link_name = "ee_gripper_link"
     arm_stiffness = 1e3
     arm_damping = 1e2
     arm_force_limit = 100
-    gripper_stiffness = 1e3
+    gripper_stiffness = 4e3
     gripper_damping = 1e2
     gripper_force_limit = 100
 
@@ -128,6 +128,28 @@ class WidowXAI(BaseAgent):
     @property
     def tcp_pose(self):
         return self.tcp.pose
+    
+    @staticmethod
+    def build_grasp_pose(approaching, closing, center):
+        """
+        构造 widowx 的 grasp pose：
+        - X: 夹爪闭合方向 closing（左右）
+        - Y: 正交方向（approaching × closing）
+        - Z: 接近方向 approaching（向下）
+        """
+        assert np.abs(1 - np.linalg.norm(approaching)) < 1e-3
+        assert np.abs(1 - np.linalg.norm(closing)) < 1e-3
+        assert np.abs(approaching @ closing) <= 1e-3
+
+        ortho = np.cross(approaching, closing)  # Y 轴（右手法则）
+
+        T = np.eye(4)
+        # print(approaching, ortho, closing)
+        T[:3, :3] = np.stack([approaching, closing, ortho], axis=1)  # X-Y-Z
+        # T[:3, :3] = np.stack([[ 0, 0, -1], [ 0, 1,0], [ 1, 0, 0]], axis=1)
+        T[:3, 3] = center
+
+        return sapien.Pose(T)
 
     def is_grasping(self, object: Actor, min_force=0.2, max_angle=85):
         """Check if the robot is grasping an object

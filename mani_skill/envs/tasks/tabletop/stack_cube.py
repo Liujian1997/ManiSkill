@@ -4,9 +4,10 @@ import numpy as np
 import sapien
 import torch
 
-from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import Fetch, Panda, WidowXAIWristCam
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
+from mani_skill.envs.tasks.tabletop.stack_cube_cfgs import STACK_CUBE_CONFIGS
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.building import actors
@@ -32,13 +33,27 @@ class StackCubeEnv(BaseEnv):
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/StackCube-v1_rt.mp4"
-    SUPPORTED_ROBOTS = ["panda_wristcam", "panda", "fetch"]
-    agent: Union[Panda, Fetch]
+    SUPPORTED_ROBOTS = ["panda_wristcam", "panda", "fetch", "widowxai_wristcam"]
+    agent: Union[Panda, Fetch, WidowXAIWristCam]
 
     def __init__(
         self, *args, robot_uids="panda_wristcam", robot_init_qpos_noise=0.02, **kwargs
     ):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        if robot_uids in STACK_CUBE_CONFIGS:
+            cfg = STACK_CUBE_CONFIGS[robot_uids]
+        else:
+            cfg = STACK_CUBE_CONFIGS["panda"]
+        print(robot_uids)
+        self.cube_half_size = cfg["cube_half_size"]
+        self.goal_radius = cfg["goal_radius"]
+        self.spawn_range = cfg["spawn_range"]
+        self.spawn_offset = cfg["spawn_offset"]
+        self.goal_offset_x = cfg["goal_offset_x"]
+        self.sensor_cam_eye_pos = cfg["sensor_cam_eye_pos"]
+        self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
+        self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
+        self.human_cam_target_pos = cfg["human_cam_target_pos"]
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -82,8 +97,9 @@ class StackCubeEnv(BaseEnv):
 
             xyz = torch.zeros((b, 3))
             xyz[:, 2] = 0.02
-            xy = torch.rand((b, 2)) * 0.2 - 0.1
-            region = [[-0.1, -0.2], [0.1, 0.2]]
+            xy = torch.rand((b, 2)) * self.spawn_range - (self.spawn_range / 2)
+            # xyz[..., 0] += self.spawn_offset  # 对 x 方向偏移
+            region = [[-0.1+self.spawn_offset, -0.2], [0.1+self.spawn_offset, 0.2]]
             sampler = randomization.UniformPlacementSampler(
                 bounds=region, batch_size=b, device=self.device
             )

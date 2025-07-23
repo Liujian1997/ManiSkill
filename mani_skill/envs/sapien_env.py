@@ -402,6 +402,7 @@ class BaseEnv(gym.Env):
                     agent_cls = robot_uid
                 else:
                     if robot_uid not in REGISTERED_AGENTS:
+                        # print(REGISTERED_AGENTS)
                         raise RuntimeError(
                             f"Agent {robot_uid} not found in the dict of registered agents. If the id is not a typo then make sure to apply the @register_agent() decorator."
                         )

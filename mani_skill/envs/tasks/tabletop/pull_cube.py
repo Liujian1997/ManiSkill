@@ -6,8 +6,9 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 
-from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import Fetch, Panda, WidowXAIWristCam
 from mani_skill.envs.sapien_env import BaseEnv
+from mani_skill.envs.tasks.tabletop.pull_cube_cfgs import PULL_CUBE_CONFIGS
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
@@ -32,23 +33,38 @@ class PullCubeEnv(BaseEnv):
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PullCube-v1_rt.mp4"
-    SUPPORTED_ROBOTS = ["panda", "fetch"]
-    agent: Union[Panda, Fetch]
+    SUPPORTED_ROBOTS = ["panda", "fetch", "widowxai_wristcam"]
+    agent: Union[Panda, Fetch, WidowXAIWristCam]
     goal_radius = 0.1
     cube_half_size = 0.02
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        if robot_uids in PULL_CUBE_CONFIGS:
+            cfg = PULL_CUBE_CONFIGS[robot_uids]
+        else:
+            cfg = PULL_CUBE_CONFIGS["panda"]
+        print(robot_uids)
+        self.cube_half_size = cfg["cube_half_size"]
+        self.goal_radius = cfg["goal_radius"]
+        self.spawn_range = cfg["spawn_range"]
+        self.spawn_offset = cfg["spawn_offset"]
+        self.goal_offset_x = cfg["goal_offset_x"]
+        self.sensor_cam_eye_pos = cfg["sensor_cam_eye_pos"]
+        self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
+        self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
+        self.human_cam_target_pos = cfg["human_cam_target_pos"]
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
+
 
     @property
     def _default_sensor_configs(self):
-        pose = look_at(eye=[-0.5,0.0,0.25], target=[0.2,0.0,-0.5])
+        pose = look_at(eye=self.sensor_cam_eye_pos, target=self.sensor_cam_target_pos)
         return [CameraConfig("base_camera", pose, 128, 128, np.pi / 2, 0.01, 100)]
 
     @property
     def _default_human_render_camera_configs(self):
-        pose = look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
+        pose = look_at(self.human_cam_eye_pos, self.human_cam_target_pos)
         return CameraConfig("render_camera", pose, 512, 512, 1, 0.01, 100)
 
     def _load_agent(self, options: dict):
@@ -85,14 +101,16 @@ class PullCubeEnv(BaseEnv):
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
             xyz = torch.zeros((b, 3))
-            xyz[..., :2] = torch.rand((b, 2)) * 0.2 - 0.1
+            xyz[..., :2] = torch.rand((b, 2)) * self.spawn_range - (self.spawn_range / 2)
+            xyz[..., 0] += self.spawn_offset  # 对 x 方向偏移
             xyz[..., 2] = self.cube_half_size
             q = [1, 0, 0, 0]
 
             obj_pose = Pose.create_from_pq(p=xyz, q=q)
             self.obj.set_pose(obj_pose)
 
-            target_region_xyz = xyz - torch.tensor([0.1 + self.goal_radius, 0, 0])
+            target_region_xyz = xyz - torch.tensor([self.goal_offset_x + self.goal_radius, 0, 0])
+            print(target_region_xyz)
 
             target_region_xyz[..., 2] = 1e-3
             self.goal_region.set_pose(
