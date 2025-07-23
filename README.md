@@ -106,6 +106,9 @@ The assets are licensed under [CC BY-NC 4.0](https://creativecommons.org/license
 
 # ManiSkill with XArm6: 任务迁移与优化
 
+- [GitHub官方文档](https://maniskill.readthedocs.io/en/latest/) - GitHub的官方帮助文档。
+- [参考仓库](https://github.com/Johnathan218/ManiSkill) - 拓展xarm6 (Robotiq以及stick) 本体。
+
 基于Panda机械臂的任务实现，我们成功为XArm6机械臂适配了10项任务。以下是完整的技术实现文档。
 
 ---
@@ -244,3 +247,4 @@ mani_skill/
 ├── examples/motionplanning/xarm6/  # 所有任务解决方案
 └── utils/scene_builder/            # 场景配置扩展
 ```
+
