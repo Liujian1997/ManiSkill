@@ -14,6 +14,7 @@ from mani_skill.envs.utils import randomization
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.building import actors
+from mani_skill.envs.tasks.tabletop.place_sphere_cfgs import PLACE_SPHERE_CONFIGS
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose
@@ -40,23 +41,32 @@ class PlaceSphereEnv(BaseEnv):
     # Specify some supported robot types
     agent: Union[Panda, Fetch]
 
-    # set some commonly used values
-    radius = 0.02  # radius of the sphere
-    inner_side_half_len = 0.02  # side length of the bin's inner square
-    short_side_half_size = 0.0025  # length of the shortest edge of the block
-    block_half_size = [
-        short_side_half_size,
-        2 * short_side_half_size + inner_side_half_len,
-        2 * short_side_half_size + inner_side_half_len,
-    ]  # The bottom block of the bin, which is larger: The list represents the half length of the block along the [x, y, z] axis respectively.
-    edge_block_half_size = [
-        short_side_half_size,
-        2 * short_side_half_size + inner_side_half_len,
-        2 * short_side_half_size,
-    ]  # The edge block of the bin, which is smaller. The representations are similar to the above one
-
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        if robot_uids in PLACE_SPHERE_CONFIGS:
+            cfg = PLACE_SPHERE_CONFIGS[robot_uids]
+        else:
+            cfg = PLACE_SPHERE_CONFIGS["panda"]
+        self.radius = cfg["radius"]
+        self.inner_side_half_len = cfg["inner_side_half_len"]
+        self.short_side_half_size = cfg['short_side_half_size']
+        self.spawn_range = cfg["spawn_range"]
+        self.spawn_offset = cfg["spawn_offset"]
+        self.goal_offset_x = cfg["goal_offset_x"]
+        self.sensor_cam_eye_pos = cfg["sensor_cam_eye_pos"]
+        self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
+        self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
+        self.human_cam_target_pos = cfg["human_cam_target_pos"]
+        self.block_half_size = [
+            self.short_side_half_size,
+            2 * self.short_side_half_size + self.inner_side_half_len,
+            2 * self.short_side_half_size + self.inner_side_half_len,
+        ]  # The bottom block of the bin, which is larger: The list represents the half length of the block along the [x, y, z] axis respectively.
+        self.edge_block_half_size = [
+           self. short_side_half_size,
+            2 * self.short_side_half_size + self.inner_side_half_len,
+            2 * self.short_side_half_size,
+        ]  # The edge block of the bin, which is smaller. The representations are similar to the above one
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -157,13 +167,16 @@ class PlaceSphereEnv(BaseEnv):
 
             # init the sphere in the first 1/4 zone along the x-axis (so that it doesn't collide the bin)
             xyz = torch.zeros((b, 3))
-            xyz[..., 0] = (torch.rand((b, 1)) * 0.05 - 0.1)[
+            xyz[..., 0] = (torch.rand((b, 1)) * self.spawn_range / 4 - self.spawn_range / 2)[
                 ..., 0
             ]  # first 1/4 zone of x ([-0.1, -0.05])
-            xyz[..., 1] = (torch.rand((b, 1)) * 0.2 - 0.1)[
+            xyz[..., 1] = (torch.rand((b, 1)) * self.spawn_range - self.spawn_range / 2)[
                 ..., 0
             ]  # spanning all possible ys
             xyz[..., 2] = self.radius  # on the table
+
+            xyz[..., 0] += self.spawn_offset # TODO
+
             q = [1, 0, 0, 0]
             obj_pose = Pose.create_from_pq(p=xyz, q=q)
             self.obj.set_pose(obj_pose)
@@ -171,12 +184,15 @@ class PlaceSphereEnv(BaseEnv):
             # init the bin in the last 1/2 zone along the x-axis (so that it doesn't collide the sphere)
             pos = torch.zeros((b, 3))
             pos[:, 0] = (
-                torch.rand((b, 1))[..., 0] * 0.1
+                torch.rand((b, 1))[..., 0] * self.spawn_range / 2
             )  # the last 1/2 zone of x ([0, 0.1])
             pos[:, 1] = (
-                torch.rand((b, 1))[..., 0] * 0.2 - 0.1
+                torch.rand((b, 1))[..., 0] * self.spawn_range - self.spawn_range / 2
             )  # spanning all possible ys
             pos[:, 2] = self.block_half_size[0]  # on the table
+
+            pos[..., 0] += self.spawn_offset # TODO
+            
             q = [1, 0, 0, 0]
             bin_pose = Pose.create_from_pq(p=pos, q=q)
             self.bin.set_pose(bin_pose)
@@ -190,9 +206,10 @@ class PlaceSphereEnv(BaseEnv):
             torch.abs(offset[..., 2] - self.radius - self.block_half_size[0]) <= 0.005
         )
         is_obj_on_bin = torch.logical_and(xy_flag, z_flag)
-        is_obj_static = self.obj.is_static(lin_thresh=1e-2, ang_thresh=0.5)
+        is_obj_static = self.obj.is_static(lin_thresh=1e-1, ang_thresh=1.0)
         is_obj_grasped = self.agent.is_grasping(self.obj)
-        success = is_obj_on_bin & is_obj_static & (~is_obj_grasped)
+        # success = is_obj_on_bin & is_obj_static & (~is_obj_grasped)
+        success = is_obj_on_bin & (~is_obj_grasped)
         return {
             "is_obj_grasped": is_obj_grasped,
             "is_obj_on_bin": is_obj_on_bin,

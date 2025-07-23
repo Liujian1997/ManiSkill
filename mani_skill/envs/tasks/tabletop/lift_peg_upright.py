@@ -58,6 +58,7 @@ class LiftPegUprightEnv(BaseEnv):
         self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
         self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
         self.human_cam_target_pos = cfg["human_cam_target_pos"]
+        self.spawn_offset = cfg["spawn_offset"]
 
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
@@ -104,6 +105,7 @@ class LiftPegUprightEnv(BaseEnv):
             vars2 = torch.rand((b, 2), device=self.device) * (2 * half) - half
             xyz[..., :2] = vars2 + torch.tensor(center, device=self.device)
             xyz[..., 2] = self.peg_half_width
+            xyz[..., 0] += self.spawn_offset
             q = euler2quat(np.pi / 2, 0, 0)
 
             obj_pose = Pose.create_from_pq(p=xyz, q=q)

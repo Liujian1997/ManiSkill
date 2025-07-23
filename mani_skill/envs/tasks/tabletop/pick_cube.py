@@ -5,7 +5,7 @@ import sapien
 import torch
 
 import mani_skill.envs.utils.randomization as randomization
-from mani_skill.agents.robots import SO100, Fetch, Panda, WidowXAI, XArm6Robotiq
+from mani_skill.agents.robots import SO100, Fetch, Panda, WidowXAI, XArm6Robotiq, WidowXAIWristCam
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.tasks.tabletop.pick_cube_cfgs import PICK_CUBE_CONFIGS
 from mani_skill.sensors.camera import CameraConfig
@@ -40,8 +40,9 @@ class PickCubeEnv(BaseEnv):
         "xarm6_robotiq",
         "so100",
         "widowxai",
+        "widowxai_wristcam"
     ]
-    agent: Union[Panda, Fetch, XArm6Robotiq, SO100, WidowXAI]
+    agent: Union[Panda, Fetch, XArm6Robotiq, SO100, WidowXAI, WidowXAIWristCam]
     cube_half_size = 0.02
     goal_thresh = 0.025
     cube_spawn_half_size = 0.05
@@ -147,12 +148,13 @@ class PickCubeEnv(BaseEnv):
 
     def evaluate(self):
         is_obj_placed = (
-            torch.linalg.norm(self.cube.pose.p[:, 2] - self.cube_half_size, axis=0)
+            torch.linalg.norm(self.cube.pose.p[:, 2] - torch.tensor(self.cube_half_size).unsqueeze(0).expand(self.cube.pose.p.shape[0], -1).to(self.device), axis=0)
             >= self.goal_thresh
         )
         is_grasped = self.agent.is_grasping(self.cube)
         is_robot_static = self.agent.is_static(0.2)
         return {
+            # "success": is_obj_placed & is_robot_static,
             "success": is_obj_placed,
             "is_obj_placed": is_obj_placed,
             "is_robot_static": is_robot_static,

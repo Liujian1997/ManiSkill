@@ -4,7 +4,7 @@ import numpy as np
 import sapien
 import torch
 
-from mani_skill.agents.robots import Fetch, Panda, XArm6Robotiq
+from mani_skill.agents.robots import Fetch, Panda, XArm6Robotiq, WidowXAIWristCam
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
 from mani_skill.envs.tasks.tabletop.pull_cube_tool_cfgs import PULL_CUBE_TOOL_CONFIGS
@@ -35,9 +35,9 @@ class PullCubeToolEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PullCubeTool-v1_rt.mp4"
 
-    SUPPORTED_ROBOTS = ["panda", "fetch", "xarm6_robotiq"]
+    SUPPORTED_ROBOTS = ["panda", "fetch", "xarm6_robotiq", "widowxai_wristcam"]
     SUPPORTED_REWARD_MODES = ("normalized_dense", "dense", "sparse", "none")
-    agent: Union[Panda, Fetch, XArm6Robotiq]
+    agent: Union[Panda, Fetch, XArm6Robotiq, WidowXAIWristCam]
 
     # Default values (will be overridden by config)
     goal_radius = 0.3
@@ -71,6 +71,9 @@ class PullCubeToolEnv(BaseEnv):
         self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
         self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
         self.human_cam_target_pos = cfg["human_cam_target_pos"]
+        self.spawn_range = cfg["spawn_range"]
+        self.spawn_offset = cfg["spawn_offset"]
+        self.goal_offset_x = cfg["goal_offset_x"]
 
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
@@ -182,8 +185,9 @@ class PullCubeToolEnv(BaseEnv):
             self.scene_builder.initialize(env_idx)
 
             tool_xyz = torch.zeros((b, 3), device=self.device)
-            tool_xyz[..., :2] = -torch.rand((b, 2), device=self.device) * 0.2 - 0.1
+            tool_xyz[..., :2] = torch.rand((b, 2))  * self.spawn_range - (self.spawn_range / 2)
             tool_xyz[..., 2] = self.height / 2
+            tool_xyz[..., 0] += self.spawn_offset  # 对 x 方向偏移
             tool_q = torch.tensor([1, 0, 0, 0], device=self.device).expand(b, 4)
 
             tool_pose = Pose.create_from_pq(p=tool_xyz, q=tool_q)
@@ -197,6 +201,9 @@ class PullCubeToolEnv(BaseEnv):
             )
             cube_xyz[..., 1] = torch.rand(b, device=self.device) * 0.3 - 0.25
             cube_xyz[..., 2] = self.cube_size / 2 + 0.015
+            cube_xyz[..., 0] += self.spawn_offset # 对 x 方向偏移
+            cube_xyz[..., 1] += - self.spawn_offset # 对 y 方向偏移
+
 
             cube_q = randomization.random_quaternions(
                 b,

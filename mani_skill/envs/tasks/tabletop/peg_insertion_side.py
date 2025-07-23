@@ -82,6 +82,10 @@ class PegInsertionSideEnv(BaseEnv):
                 reconfiguration_freq = 1
             else:
                 reconfiguration_freq = 0
+            if robot_uids == "widowxai_wristcam":
+                self.spawn_offset = -0.3
+            else:
+                self.spawn_offset = 0.0
         super().__init__(
             *args,
             robot_uids=robot_uids,
@@ -210,6 +214,7 @@ class PegInsertionSideEnv(BaseEnv):
                 lock_y=True,
                 bounds=(np.pi / 2 - np.pi / 3, np.pi / 2 + np.pi / 3),
             )
+            pos[:, 0] += self.spawn_offset
             self.peg.set_pose(Pose.create_from_pq(pos, quat))
 
             xy = randomization.uniform(
@@ -227,6 +232,7 @@ class PegInsertionSideEnv(BaseEnv):
                 lock_y=True,
                 bounds=(np.pi / 2 - np.pi / 8, np.pi / 2 + np.pi / 8),
             )
+            pos[:, 0] += self.spawn_offset
             self.box.set_pose(Pose.create_from_pq(pos, quat))
 
             # Initialize the robot with robot-specific initial states
@@ -257,7 +263,34 @@ class PegInsertionSideEnv(BaseEnv):
                 qpos[:, :6] += noise  # Add noise to arm joints
                 qpos[:, 6:] = 0  # Ensure gripper starts open
 
-            self.agent.robot.set_qpos(qpos)
+            elif self.agent.uid == "xarm7_robotiq_wristcam":
+                # Rest position for arm, open gripper
+                base_qpos = np.array(
+                    [0, 0.22, -1.23, 0, 1.01, 0, 0, 0, 0, 0, 0, 0, 0]
+                )
+                noise = self._episode_rng.normal(0, 0.02, (b, 7))  # Only for arm joints
+                qpos = np.tile(base_qpos, (b, 1))
+                qpos[:, :7] += noise  # Add noise to arm joints
+                qpos[:, 7:] = 0  # Ensure gripper starts open
+
+            elif self.agent.uid == "widowxai_wristcam":
+                # Rest position for arm, open gripper
+                base_qpos = np.array(
+                    [0.0,
+                    1.38,
+                    1.04,
+                    -1.26,
+                    0.0,
+                    0.0,
+                    0.026,
+                    0.026,]
+                )
+                noise = self._episode_rng.normal(0, 0.02, (b, 6))  # Only for arm joints
+                qpos = np.tile(base_qpos, (b, 1))
+                qpos[:, :6] += noise  # Add noise to arm joints
+                qpos[:, 6:] = 0  # Ensure gripper starts open
+
+            # self.agent.robot.set_qpos(qpos)
 
     # save some commonly used attributes
     @property

@@ -25,6 +25,7 @@ from transforms3d.euler import euler2quat
 
 from mani_skill.agents.robots import Fetch, Panda
 from mani_skill.envs.sapien_env import BaseEnv
+from mani_skill.envs.tasks.tabletop.push_cube_cfgs import PULL_CUBE_CONFIGS
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.building import actors
@@ -62,6 +63,20 @@ class PushCubeEnv(BaseEnv):
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        if robot_uids in PULL_CUBE_CONFIGS:
+            cfg = PULL_CUBE_CONFIGS[robot_uids]
+        else:
+            cfg = PULL_CUBE_CONFIGS["panda"]
+        print(robot_uids)
+        self.cube_half_size = cfg["cube_half_size"]
+        self.goal_radius = cfg["goal_radius"]
+        self.spawn_range = cfg["spawn_range"]
+        self.spawn_offset = cfg["spawn_offset"]
+        self.goal_offset_x = cfg["goal_offset_x"]
+        self.sensor_cam_eye_pos = cfg["sensor_cam_eye_pos"]
+        self.sensor_cam_target_pos = cfg["sensor_cam_target_pos"]
+        self.human_cam_eye_pos = cfg["human_cam_eye_pos"]
+        self.human_cam_target_pos = cfg["human_cam_target_pos"]
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     # Specify default simulation/gpu memory configurations to override any default values
@@ -153,9 +168,10 @@ class PushCubeEnv(BaseEnv):
 
             # here we write some randomization code that randomizes the x, y position of the cube we are pushing in the range [-0.1, -0.1] to [0.1, 0.1]
             xyz = torch.zeros((b, 3))
-            xyz[..., :2] = torch.rand((b, 2)) * 0.2 - 0.1
+            xyz[..., :2] = torch.rand((b, 2))  * self.spawn_range - (self.spawn_range / 2)
             xyz[..., 2] = self.cube_half_size
-            xyz[..., 0] = torch.rand((b, 1)) * 0.2 - 0.2
+            # xyz[..., 0] = torch.rand((b, 1))  * self.spawn_range - self.spawn_range 
+            xyz[..., 0] += self.spawn_offset  # 对 x 方向偏移
             q = [1, 0, 0, 0]
             # we can then create a pose object using Pose.create_from_pq to then set the cube pose with. Note that even though our quaternion
             # is not batched, Pose.create_from_pq will automatically batch p or q accordingly
@@ -167,7 +183,7 @@ class PushCubeEnv(BaseEnv):
 
             # here we set the location of that red/white target (the goal region). In particular here, we set the position to be in front of the cube
             # and we further rotate 90 degrees on the y-axis to make the target object face up
-            target_region_xyz = xyz + torch.tensor([0.1 + self.goal_radius, 0, 0])
+            target_region_xyz = xyz + torch.tensor([self.goal_offset_x + self.goal_radius, 0, 0])
             # set a little bit above 0 so the target is sitting on the table
             target_region_xyz[..., 2] = 1e-3
             self.goal_region.set_pose(

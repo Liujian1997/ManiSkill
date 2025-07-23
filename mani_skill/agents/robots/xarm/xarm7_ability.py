@@ -1,3 +1,4 @@
+import torch
 from copy import deepcopy
 from typing import Dict, Tuple
 
@@ -10,12 +11,14 @@ from mani_skill.agents.base_agent import BaseAgent, Keyframe
 from mani_skill.agents.controllers import *
 from mani_skill.agents.registration import register_agent
 from mani_skill.utils import sapien_utils
+from mani_skill.utils.structs.actor import Actor
+from mani_skill.utils import common, sapien_utils
 
 
 @register_agent()
 class XArm7Ability(BaseAgent):
     uid = "xarm7_ability"
-    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm7/xarm7_ability_right_hand.urdf"
+    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm7/xarm7_robotiq.urdf"
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
@@ -202,3 +205,37 @@ class XArm7Ability(BaseAgent):
         )
 
         self.queries: Dict[str, Tuple[physx.PhysxGpuContactQuery, Tuple[int]]] = dict()
+
+    def is_grasping(self, object: Actor, min_force=0.5, max_angle=85):
+        l_contact_forces = self.scene.get_pairwise_contact_forces(
+            self.finger1_link, object
+        )
+        r_contact_forces = self.scene.get_pairwise_contact_forces(
+            self.finger2_link, object
+        )
+        lforce = torch.linalg.norm(l_contact_forces, axis=1)
+        rforce = torch.linalg.norm(r_contact_forces, axis=1)
+
+        ldirection = self.finger1_link.pose.to_transformation_matrix()[..., :3, 1]
+        rdirection = self.finger2_link.pose.to_transformation_matrix()[..., :3, 1]
+        langle = common.compute_angle_between(ldirection, l_contact_forces)
+        rangle = common.compute_angle_between(rdirection, r_contact_forces)
+        lflag = torch.logical_and(
+            lforce >= min_force, torch.rad2deg(langle) <= max_angle
+        )
+        rflag = torch.logical_and(
+            rforce >= min_force, torch.rad2deg(rangle) <= max_angle
+        )
+        return torch.logical_and(lflag, rflag)
+    
+    @staticmethod
+    def build_grasp_pose(approaching, closing, center):
+        """Build a grasp pose ()."""
+        assert np.abs(1 - np.linalg.norm(approaching)) < 1e-3
+        assert np.abs(1 - np.linalg.norm(closing)) < 1e-3
+        assert np.abs(approaching @ closing) <= 1e-3
+        ortho = np.cross(closing, approaching)
+        T = np.eye(4)
+        T[:3, :3] = np.stack([ortho, closing, approaching], axis=1)
+        T[:3, 3] = center
+        return sapien.Pose(T)
