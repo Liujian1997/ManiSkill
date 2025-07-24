@@ -460,10 +460,10 @@ class RecordEpisode(gym.Wrapper):
         return obs, info
 
     def step(self, action):
-        # if self.save_video and self._video_steps == 0:
-        #     # save the first frame of the video here (s_0) instead of inside reset as user
-        #     # may call env.reset(...) multiple times but we want to ignore empty trajectories
-        #     self.render_images.append(self.capture_image())
+        if self.save_video and self._video_steps == 0:
+            # save the first frame of the video here (s_0) instead of inside reset as user
+            # may call env.reset(...) multiple times but we want to ignore empty trajectories
+            self.render_images.append(self.capture_image())
         obs, rew, terminated, truncated, info = super().step(action)
 
         if self.save_trajectory:
@@ -533,7 +533,7 @@ class RecordEpisode(gym.Wrapper):
                 image = self.capture_image()
 
             # If you want to visualize the third view camera, uncomment the following line
-            image = common.to_numpy(obs['sensor_data']["third_view_camera"]["rgb"]).squeeze(0)
+            # image = common.to_numpy(obs['sensor_data']["third_view_camera"]["rgb"]).squeeze(0)
             self.render_images.append(image)
             if (
                 self.max_steps_per_video is not None
