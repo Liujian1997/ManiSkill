@@ -69,8 +69,11 @@ PULL_CUBE_TOOL_CONFIGS = {
         "sensor_cam_target_pos": [-0.1, 0, 0.1],
         "human_cam_eye_pos": [0.6, 0.7, 0.6],
         "human_cam_target_pos": [0.0, 0.0, 0.35],
+        # "spawn_range": 0.2,
+        # "spawn_offset": -0.2,
+        # "goal_offset_x": 0.1,
         "spawn_range": 0.2,
         "spawn_offset": -0.2,
-        "goal_offset_x": 0.1,
+        "goal_offset_x": 0.05,
     },
 }

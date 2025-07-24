@@ -44,7 +44,6 @@ class PullCubeEnv(BaseEnv):
             cfg = PULL_CUBE_CONFIGS[robot_uids]
         else:
             cfg = PULL_CUBE_CONFIGS["panda"]
-        print(robot_uids)
         self.cube_half_size = cfg["cube_half_size"]
         self.goal_radius = cfg["goal_radius"]
         self.spawn_range = cfg["spawn_range"]
@@ -110,7 +109,6 @@ class PullCubeEnv(BaseEnv):
             self.obj.set_pose(obj_pose)
 
             target_region_xyz = xyz - torch.tensor([self.goal_offset_x + self.goal_radius, 0, 0])
-            print(target_region_xyz)
 
             target_region_xyz[..., 2] = 1e-3
             self.goal_region.set_pose(

@@ -71,7 +71,7 @@ def solve(env: LiftPegUprightEnv, seed=None, debug=False, vis=False):
     # -------------------------------------------------------------------------- #
     # Lift
     # -------------------------------------------------------------------------- #
-    lift_pose = sapien.Pose([0, 0, 0.30]) * grasp_pose
+    lift_pose = sapien.Pose([0, 0, 0.29]) * grasp_pose
     res = planner.move_to_pose_with_screw(lift_pose)
     if res == -1: return res
 

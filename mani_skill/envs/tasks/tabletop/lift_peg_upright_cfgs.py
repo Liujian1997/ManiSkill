@@ -56,7 +56,7 @@ LIFT_PEG_UPRIGHT_CONFIGS = {
         "human_cam_eye_pos": [0.6, 0.7, 0.6],
         "human_cam_target_pos": [0.0, 0.0, 0.35],
         "spawn_range": 0.2,
-        "spawn_offset": 0.0,
+        "spawn_offset": -0.05,
     },
     "widowxai_wristcam": {
         "peg_half_width": 0.02,
