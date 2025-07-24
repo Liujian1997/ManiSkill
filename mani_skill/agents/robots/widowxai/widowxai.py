@@ -91,6 +91,19 @@ class WidowXAI(BaseAgent):
             use_delta=True,
             use_target=False,
         )
+        arm_pd_ee_delta_pose = PDEEPoseControllerConfig(
+            joint_names=self.arm_joint_names,
+            pos_lower=-0.1,
+            pos_upper=0.1,
+            rot_lower=-0.1,
+            rot_upper=0.1,
+            stiffness=self.arm_stiffness,
+            damping=self.arm_damping,
+            force_limit=self.arm_force_limit,
+            # friction=self.arm_friction,
+            ee_link=self.ee_link_name,
+            urdf_path=self.urdf_path,
+        )
         gripper_pd_joint_pos = PDJointPosControllerConfig(
             self.gripper_joint_names,
             lower=0.0,
@@ -109,6 +122,10 @@ class WidowXAI(BaseAgent):
             pd_joint_pos=dict(arm=arm_pd_joint_pos, gripper=gripper_pd_joint_pos),
             pd_joint_target_delta_pos=dict(
                 arm=arm_pd_joint_target_delta_pos,
+                gripper=gripper_pd_joint_pos,
+            ),
+            pd_ee_delta_pose=dict(
+                arm=arm_pd_ee_delta_pose,
                 gripper=gripper_pd_joint_pos,
             ),
         )
