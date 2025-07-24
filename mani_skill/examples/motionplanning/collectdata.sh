@@ -14,8 +14,8 @@
 
 for robot in xarm7
     do
-        for env_id in PickCube-v1 PushCube-v1 StackCube-v1 PullCube-v1 PullCubeTool-v1 PlaceSphere-v1 LiftPegUpright-v1
-        # for env_id in LiftPegUpright-v1
+        # for env_id in PickCube-v1 PushCube-v1 StackCube-v1 PullCube-v1 PullCubeTool-v1 PlaceSphere-v1 LiftPegUpright-v1
+        for env_id in PushCube-v1
             do
                 python /home/pc/ManiSkill/mani_skill/examples/motionplanning/$robot/run.py \
                     --env-id $env_id \
@@ -30,8 +30,8 @@ done
 
 for robot in widowxai
     do
-        for env_id in PickCube-v1 PushCube-v1 StackCube-v1 PullCube-v1 PullCubeTool-v1 PlaceSphere-v1 LiftPegUpright-v1
-        # for env_id in PullCubeTool-v1 PlaceSphere-v1 LiftPegUpright-v1
+        # for env_id in PickCube-v1 PushCube-v1 StackCube-v1 PullCube-v1 PullCubeTool-v1 PlaceSphere-v1 LiftPegUpright-v1
+        for env_id in PickCube-v1 
             do
                 python /home/pc/ManiSkill/mani_skill/examples/motionplanning/$robot/run.py \
                     --env-id $env_id \
