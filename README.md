@@ -1,16 +1,19 @@
 
 ---
 
-# ManiSkill with XArm6: 任务迁移与优化
-
+# VLA BenchMark: ManiSkill with Panda, Xarm6, Xarm7 and Widowxai
 - [GitHub官方文档](https://maniskill.readthedocs.io/en/latest/) - GitHub的官方帮助文档。
-- [参考仓库](https://github.com/Johnathan218/ManiSkill) - 拓展xarm6 (Robotiq以及stick) 本体。
 
-基于Panda机械臂的任务实现，我们成功为XArm6机械臂适配了10项任务。以下是完整的技术实现文档。
+本项目基于Maniskill，支持Panda, Xarm6, Xarm7, Widowxai 4种本体共10个任务的仿真
+支持数据生成、client-server仿真测试等功能
+基于此项目我们将公开GR00T、UniACT、Pi0、HPT的跨本体多任务性能
 
 ---
+## VLA BenchMark
+Coming Soon.
 
 ## **任务概览**
+基于Maniskill改进的详细文档如下：
 | 任务名称 | 状态 | 关键修改点 | 成功率提升策略 |
 |----------|------|------------|----------------|
 | [PullCube-v1](#PullCube-v1) | ✅ | 运动规划调整 | 最终点上移避免触底 |
