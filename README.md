@@ -5,7 +5,9 @@
 - [Maniskill](https://maniskill.readthedocs.io/en/latest/) - GitHub的官方帮助文档。
 
 本项目基于Maniskill，支持Panda, Xarm6, Xarm7, Widowxai 4种本体共10个任务的仿真
+
 支持数据生成、client-server仿真测试等功能
+
 基于此项目我们将公开GR00T、UniACT、Pi0、HPT的跨本体多任务性能
 
 ---
