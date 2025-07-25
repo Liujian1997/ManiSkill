@@ -20,6 +20,7 @@
 - **Advanced Motion Planning**: RRT* algorithms and optimized trajectory planning
 - **Data Generation**: Built-in tools for generating training datasets
 - **Client-Server Architecture**: Distributed simulation testing capabilities
+- **(Coming soon)Dataset**: Cross-embodiment multi-task dataset in lerobot format
 - **(Coming soon)Cross-Platform Benchmarking**: Performance evaluation across different robot embodiments
 
 ## 📋 Table of Contents
