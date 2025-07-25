@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![ManiSkill](https://img.shields.io/badge/Based%20on-ManiSkill-orange.svg)](https://maniskill.readthedocs.io/en/latest/)
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)](#)
