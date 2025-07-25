@@ -365,7 +365,6 @@ class DrawSVGEnv(BaseEnv):
                 self.num_envs, 1, 3
             )  # b,3
             z_mask = current_dot[:, :, 2] < 0
-            print(current_dot[:, :, 2], z_mask)
             dist = (
                 torch.sqrt(
                     torch.sum(
@@ -381,7 +380,6 @@ class DrawSVGEnv(BaseEnv):
             self.ref_dist = torch.logical_or(
                 self.ref_dist, (1 - z_mask.int()) * dist.reshape((self.num_envs, -1))
             )
-            print(torch.any(dist, dim=-1))
             self.dots_dist[:, self.draw_step - 1] = torch.where(
                 z_mask, -1, torch.any(dist, dim=-1)
             ).reshape(
@@ -405,8 +403,6 @@ class DrawSVGEnv(BaseEnv):
             # 设置命中率的阈值，例如 95%
             ACCURACY_THRESHOLD_PERCENT = 0.60
             dots_dist_accuracy_met = accuracy_per_env >= ACCURACY_THRESHOLD_PERCENT
-            print(accuracy_per_env)
-            print(self.ref_dist)
             # for valid drawn points
             return torch.logical_and(
                 dots_dist_accuracy_met,
