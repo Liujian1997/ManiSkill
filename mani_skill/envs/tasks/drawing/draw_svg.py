@@ -17,7 +17,7 @@ from mani_skill.utils.structs.types import SceneConfig, SimConfig
 from transforms3d.euler import euler2quat
 
 
-@register_env("DrawSVG-v1", max_episode_steps=1500)
+@register_env("DrawSVG-v1", max_episode_steps=2000)
 class DrawSVGEnv(BaseEnv):
     """
     **Task Description:**
@@ -34,7 +34,7 @@ class DrawSVGEnv(BaseEnv):
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/DrawSVG-v1_rt.mp4"
 
     
-    MAX_DOTS = 1500
+    MAX_DOTS = 2000
     """
     The total "ink" available to use and draw with before you need to call env.reset. NOTE that on GPU simulation it is not recommended to have a very high value for this as it can slow down rendering
     when too many objects are being rendered in many scenes.
