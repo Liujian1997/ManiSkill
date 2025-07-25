@@ -17,7 +17,7 @@ from mani_skill.utils.structs.types import SceneConfig, SimConfig
 from transforms3d.euler import euler2quat
 
 
-@register_env("DrawSVG-v1", max_episode_steps=1000)
+@register_env("DrawSVG-v1", max_episode_steps=1500)
 class DrawSVGEnv(BaseEnv):
     """
     **Task Description:**
@@ -33,8 +33,8 @@ class DrawSVGEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/DrawSVG-v1_rt.mp4"
 
-
-    MAX_DOTS = 1000
+    
+    MAX_DOTS = 1500
     """
     The total "ink" available to use and draw with before you need to call env.reset. NOTE that on GPU simulation it is not recommended to have a very high value for this as it can slow down rendering
     when too many objects are being rendered in many scenes.
@@ -47,7 +47,7 @@ class DrawSVGEnv(BaseEnv):
     """The brushes radius"""
     BRUSH_COLORS = [[0.8, 0.2, 0.2, 1]]
     """The colors of the brushes. If there is more than one color, each parallel environment will have a randomly sampled color."""
-    THRESHOLD = 0.1
+    THRESHOLD = 0.015
 
     SUPPORTED_REWARD_MODES = ["sparse"]
 
@@ -258,7 +258,7 @@ class DrawSVGEnv(BaseEnv):
             base_color=np.array([10, 10, 10, 255]) / 255,
         )
 
-        self.dots_dist = torch.ones((self.num_envs, 1000), device=self.device) * -1
+        self.dots_dist = torch.ones((self.num_envs, self.MAX_DOTS), device=self.device) * -1
         self.ref_dist = torch.zeros(
             (self.num_envs, self.original_points.shape[0]), device=self.device
         ).to(bool)
@@ -293,7 +293,7 @@ class DrawSVGEnv(BaseEnv):
                 -1, -2
             )  # rotation matrix
             self.points[env_idx] += target_pos.unsqueeze(1)
-            self.dots_dist[env_idx] = torch.ones((self.num_envs, 1000)) * -1
+            self.dots_dist[env_idx] = torch.ones((self.num_envs, self.MAX_DOTS)) * -1
             self.ref_dist[env_idx] = torch.zeros(
                 (self.num_envs, self.original_points.shape[0])
             ).to(bool)
@@ -365,6 +365,7 @@ class DrawSVGEnv(BaseEnv):
                 self.num_envs, 1, 3
             )  # b,3
             z_mask = current_dot[:, :, 2] < 0
+            print(current_dot[:, :, 2], z_mask)
             dist = (
                 torch.sqrt(
                     torch.sum(
@@ -375,19 +376,40 @@ class DrawSVGEnv(BaseEnv):
                 )
                 < self.THRESHOLD
             )
+            if self.ref_dist[:, 0]:
+                self.ref_dist[:, -1] = False
             self.ref_dist = torch.logical_or(
                 self.ref_dist, (1 - z_mask.int()) * dist.reshape((self.num_envs, -1))
             )
+            print(torch.any(dist, dim=-1))
             self.dots_dist[:, self.draw_step - 1] = torch.where(
                 z_mask, -1, torch.any(dist, dim=-1)
             ).reshape(
                 self.num_envs,
             )
-
             mask = self.dots_dist > -1
+
+            accuracy_per_env = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+
+            for i in range(self.num_envs):
+                # 获取当前环境的所有有效笔触状态
+                env_dots_dist_valid = self.dots_dist[i][self.dots_dist[i] > -1]
+                
+                if env_dots_dist_valid.numel() > 0: # 确保有有效的笔触
+                    # 计算命中率：命中笔触数 / 总有效笔触数
+                    accuracy_per_env[i] = torch.sum(env_dots_dist_valid.float()) / env_dots_dist_valid.numel()
+                else:
+                    # 如果没有有效的笔触，可以认为命中率为 0 或根据需求设置
+                    accuracy_per_env[i] = 0.0 # 或者 1.0 如果认为没有笔触就完美命中
+
+            # 设置命中率的阈值，例如 95%
+            ACCURACY_THRESHOLD_PERCENT = 0.60
+            dots_dist_accuracy_met = accuracy_per_env >= ACCURACY_THRESHOLD_PERCENT
+            print(accuracy_per_env)
+            print(self.ref_dist)
             # for valid drawn points
             return torch.logical_and(
-                torch.all(self.dots_dist[mask], dim=-1),
+                dots_dist_accuracy_met,
                 torch.all(self.ref_dist, dim=-1),
             )
         return torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
