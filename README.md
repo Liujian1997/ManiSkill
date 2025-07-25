@@ -59,6 +59,7 @@ cd ManiSkill
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -e .
 
 # Generate XArm6 Data
 Bash /mani_skill/examples/motionplanning/xarm6/collectdata.sh
