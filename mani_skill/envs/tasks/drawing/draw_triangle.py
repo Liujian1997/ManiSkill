@@ -36,7 +36,7 @@ class DrawTriangleEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/DrawTriangle-v1_rt.mp4"
 
-    MAX_DOTS = 500
+    MAX_DOTS = 1200
     """
     The total "ink" available to use and draw with before you need to call env.reset. NOTE that on GPU simulation it is not recommended to have a very high value for this as it can slow down rendering
     when too many objects are being rendered in many scenes.
