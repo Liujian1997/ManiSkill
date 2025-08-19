@@ -64,7 +64,7 @@ def solve(env: PlaceSphereEnv, seed=None, debug=False, vis=False):
     # -------------------------------------------------------------------------- #
     # Grasp
     # -------------------------------------------------------------------------- #
-    planner.move_to_pose_with_screw(grasp_pose)
+    planner.move_to_pose_with_screw(sapien.Pose(grasp_pose.p + np.array([0, 0, -0.015]), grasp_pose.q))
     planner.close_gripper()
 
     # -------------------------------------------------------------------------- #

@@ -78,8 +78,12 @@ def solve(env: StackCubeEnv, seed=None, debug=False, vis=False):
     # -------------------------------------------------------------------------- #
     goal_pose = env.cubeB.pose * sapien.Pose([0, 0, (env.cube_half_size[2] * 2).item()])
     offset = (goal_pose.p - env.cubeA.pose.p).cpu().numpy()[0] # remember that all data in ManiSkill is batched and a torch tensor
-    align_pose = sapien.Pose(lift_pose.p + offset, lift_pose.q)
+
+    align_pose = sapien.Pose(lift_pose.p + offset - np.array([0, 0, -0.05]), lift_pose.q)
     planner.move_to_pose_with_screw(align_pose)
+    
+    traget_pose = sapien.Pose(lift_pose.p + offset, lift_pose.q)
+    planner.move_to_pose_with_screw(traget_pose)
 
     res = planner.open_gripper()
     planner.close()

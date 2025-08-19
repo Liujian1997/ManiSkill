@@ -53,10 +53,10 @@ def solve(env: PullCubeToolEnv, seed=None, debug=False, vis=False):
     # -------------------------------------------------------------------------- #
     # Lift tool to safe height
     # -------------------------------------------------------------------------- #
-    lift_height = 0.35  
+    lift_height = 0.25 
     lift_pose = sapien.Pose(grasp_pose.p + np.array([0, 0, lift_height]))
     lift_pose.set_q(grasp_pose.q)  # Maintain grasp orientation
-    res = planner.move_to_pose_with_screw(lift_pose)
+    res = planner.move_to_pose_with_RRTConnect(lift_pose)
     if res == -1: return res
 
     cube_pos = env.cube.pose.sp.p
@@ -68,7 +68,7 @@ def solve(env: PullCubeToolEnv, seed=None, debug=False, vis=False):
     approach_pose = sapien.Pose(cube_pos) * approach_offset
     approach_pose.set_q(grasp_pose.q)
     
-    res = planner.move_to_pose_with_screw(approach_pose)
+    res = planner.move_to_pose_with_RRTConnect(approach_pose)
     if res == -1: return res
 
     # -------------------------------------------------------------------------- #
@@ -82,7 +82,7 @@ def solve(env: PullCubeToolEnv, seed=None, debug=False, vis=False):
     hook_pose = sapien.Pose(cube_pos) * behind_offset
     hook_pose.set_q(grasp_pose.q)
     
-    res = planner.move_to_pose_with_screw(hook_pose)
+    res = planner.move_to_pose_with_RRTConnect(hook_pose)
     if res == -1: return res
 
     # -------------------------------------------------------------------------- #
@@ -90,7 +90,7 @@ def solve(env: PullCubeToolEnv, seed=None, debug=False, vis=False):
     # -------------------------------------------------------------------------- #
     pull_offset = sapien.Pose([-0.35, 0, 0])
     target_pose = hook_pose * pull_offset
-    res = planner.move_to_pose_with_screw(target_pose)
+    res = planner.move_to_pose_with_RRTConnect(target_pose)
     if res == -1: return res
 
     planner.close()

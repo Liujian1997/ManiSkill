@@ -240,7 +240,9 @@ class PullCubeToolEnv(BaseEnv):
         )
 
         # Success condition - cube is pulled close enough
-        cube_pulled_close = cube_to_base_dist < (0.6 + self.spawn_offset)
+        print(cube_to_base_dist)
+        # cube_pulled_close = cube_to_base_dist < (0.6 + self.spawn_offset)
+        cube_pulled_close = cube_to_base_dist < (0.4)
 
         workspace_center = robot_base_pos.clone()
         workspace_center[:, 0] += self.arm_reach * 0.1

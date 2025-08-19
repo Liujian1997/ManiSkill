@@ -61,7 +61,7 @@ PULL_CUBE_TOOL_CONFIGS = {
         "cube_half_size": 0.02,
         "handle_length": 0.2,
         "hook_length": 0.05,
-        "width": 0.05,
+        "width": 0.047,
         "height": 0.05,
         "cube_size": 0.02,
         "arm_reach": 0.35,
