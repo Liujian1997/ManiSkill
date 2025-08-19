@@ -64,6 +64,10 @@ def solve(env: PlaceSphereEnv, seed=None, debug=False, vis=False):
     # -------------------------------------------------------------------------- #
     # Grasp
     # -------------------------------------------------------------------------- #
+    # env.agent.gripper_stiffness = 1
+    # env.agent.gripper_damping = 1
+    # env.agent.gripper_force_limit = 10
+    print(env.agent.gripper_stiffness, env.agent.gripper_force_limit)
     planner.move_to_pose_with_screw(sapien.Pose(grasp_pose.p + np.array([0, 0, -0.015]), grasp_pose.q))
     planner.close_gripper()
 

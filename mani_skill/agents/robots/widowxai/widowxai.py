@@ -69,7 +69,6 @@ class WidowXAI(BaseAgent):
     gripper_stiffness = 4e3
     gripper_damping = 1e2
     gripper_force_limit = 100
-
     @property
     def _controller_configs(self):
         arm_pd_joint_pos = PDJointPosControllerConfig(

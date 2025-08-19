@@ -199,10 +199,11 @@ class PullCubeToolEnv(BaseEnv):
                 + torch.rand(b, device=self.device) * (self.handle_length)
                 - 0.3
             )
-            cube_xyz[..., 1] = torch.rand(b, device=self.device) * 0.3 - 0.25
+            # cube_xyz[..., 1] = torch.rand(b, device=self.device) * 0.3 - 0.25
+            cube_xyz[..., 1] = torch.rand(b, device=self.device) * 0.2 - 0.15
             cube_xyz[..., 2] = self.cube_size / 2 + 0.015
             cube_xyz[..., 0] += self.spawn_offset # 对 x 方向偏移
-            cube_xyz[..., 1] += - self.spawn_offset # 对 y 方向偏移
+            # cube_xyz[..., 1] += - self.spawn_offset # 对 y 方向偏移
 
 
             cube_q = randomization.random_quaternions(
@@ -240,7 +241,7 @@ class PullCubeToolEnv(BaseEnv):
         )
 
         # Success condition - cube is pulled close enough
-        print(cube_to_base_dist)
+        # print(cube_to_base_dist)
         # cube_pulled_close = cube_to_base_dist < (0.6 + self.spawn_offset)
         cube_pulled_close = cube_to_base_dist < (0.4)
 
